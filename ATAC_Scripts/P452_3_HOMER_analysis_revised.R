@@ -29,7 +29,7 @@ setwd("/Users/ewitkop/Box/EW_Bioinformatics_Postdoc_Research/T1DAL_10X_Project/A
 
 # Paths 
 baseDir <- "/Users/ewitkop/Box/EW_Bioinformatics_Postdoc_Research/T1DAL_10X_Project/ANALYSIS_FILES"
-plotDir <- file.path(baseDir,'/T1DAL_cleanup/FIGURES/ATAC_REPEAT_FIGURES')
+plotDir <- file.path(baseDir,'FIGURES/ATAC_REPEAT_FIGURES')
 resultDir <- file.path(baseDir,'P452_3_SAVED_DATA')
 annotationDir <- file.path(baseDir, "RAW_DATA/P452_3/")
 homerDir <- file.path(baseDir, "ATAC_Analysis/HOMER_Analysis")
