@@ -134,7 +134,7 @@ for (contrast in names(contrasts)) {
 # /Users/ewitkop/Library/CloudStorage/Box-Box/EW_Bioinformatics_Postdoc_Research/T1DAL_10X_Project/ANALYSIS_FILES/ATAC_Analysis/HOMER_Analysis
 
 
-#### IMPORT HOMER RESULTS from CD57 vs PD1 contrast ####
+#### TABLE S6: IMPORT HOMER RESULTS from CD57 vs PD1 contrast and export ####
 
 # Import HOMER results using marge API package
 denovo_PD1_tbl <- marge::read_denovo_results(path = file.path(homerDir, "CD57_vs_PD1_DOWN"), homer_dir = TRUE)
@@ -145,7 +145,7 @@ denovo_motif_CD57 <- marge::read_denovo_html_results(path = file.path(homerDir, 
 
 # for each motif you have the de novo motif info and then all matches to known motifs in a table 
 
-### concatenate_motif_results fpr PD1
+### concatenate_motif_results for PD1
 denovo_PD1_motifs <- as.data.frame(do.call(rbind, lapply(denovo_motif_PD1, as.vector)))
 denovo_PD1_motifs <- cbind(motif=rownames(denovo_PD1_motifs), denovo_PD1_motifs)
 PD1_motif_information <- as.data.frame(do.call(rbind, lapply(denovo_PD1_motifs$Motif_information, as.vector)))
@@ -171,17 +171,25 @@ CD57_matches_to_known_motifs <- cbind(motif_match=rownames(CD57_matches_to_known
 
 ## filter results to keep only de novo motifs with p value < 1e-12 - which are likely to be false positives based on HOMER documentation
 class(PD1_motif_information$p_value) # character
+
+## Export data for supplementary tables
+# export initial motif information
 PD1_motif_information_keep <- PD1_motif_information %>% filter(p_value <=1e-12)
 CD57_motif_information_keep <- CD57_motif_information %>% filter(p_value <=1e-12) 
 
+# export matches of each motif to known motifs
 PD1_matches_to_known_motifs_keep <- PD1_matches_to_known_motifs %>% filter(original_alignment %in% PD1_motif_information_keep$consensus)
 CD57_matches_to_known_motifs_keep <- CD57_matches_to_known_motifs %>% filter(original_alignment %in% CD57_motif_information_keep$consensus)
 
 # export motif information and matches to known motifs
+# TABLE S6 D
 write.csv(PD1_matches_to_known_motifs_keep, file = file.path(resultDir, "PD1_matches_to_known_motifs_keep.csv"), row.names = FALSE)
+# TABLE S6 B
 write.csv(CD57_matches_to_known_motifs_keep, file = file.path(resultDir, "CD57_matches_to_known_motifs_keep.csv"), row.names = FALSE)
 
+# TABLE S6 C
 write.csv(PD1_motif_information_keep, file = file.path(resultDir, "PD1_motif_information_keep.csv"), row.names = FALSE)
+# TABLE S6 A
 write.csv(CD57_motif_information_keep, file = file.path(resultDir, "CD57_motif_information_keep.csv"), row.names = FALSE)
 
 #### Find TFs in list of CD57 vs PD1 DEGs using biomart ####
@@ -224,7 +232,7 @@ unique(cluster_ex_terms_sig_down_CD57_GO_tbl_transcription[,c("goslim_goa_descri
 #125 general transcription initiation factor activity           GO:0140223
 
 
-#### FIND OVERLAP BETWEEN ATAC TF ENRICHMENT AND DEGS AND PLOT VOLCANO ####
+#### FIGURE 4B: FIND OVERLAP BETWEEN ATAC TF ENRICHMENT AND DEGS AND PLOT VOLCANO ####
 
 PD1_matches_to_known_motifs_keep 
 CD57_matches_to_known_motifs_keep
@@ -275,101 +283,9 @@ PD1_CD57_volcano_plot <- ggplot(PD1_CD57_volcano, aes(y = -log10(p_value), x = n
   labs(x = "log2 Fold Change of TF DEGs",y = "Differential Peak Motif\nEnrichment p-value", title = "Differential Expression of\nEnriched Transcription Factors") +
   geom_vline(xintercept = 0, linetype = "dotted") 
 
-# export plot
+# export plot FIGURE 4B
 ggsave(plot = PD1_CD57_volcano_plot, 
        file = file.path(plotDir, "PD1_CD57_volcano_plot.pdf"),device = "pdf", width = 4, height = 4)
-
-## Replot the volcano plot plotting the DEG q value instead of p value
-
-PD1_CD57_volcano_plot_log10q <- ggplot(PD1_CD57_volcano, aes(y = -log10(p_value), x = -log10(q_value), 
-                                                             color = group, label = gene_short_name)) +
-  theme_minimal() +
-  geom_point(size = 2) +
-  ggrepel::geom_text_repel(color = "black", size = 5, max.overlaps = 10 ) +
-  #annotate("text", x = -1, y = 6.5, label = "PPI enrichment\np-value 2.74e-07", size = 3) +
-  scale_color_manual(values = c("#ba4d4cc7", "#fdbf6fff")) +
-  theme(legend.title= element_blank(), legend.text = element_text(size = 12), text = element_text(size = 12),
-        legend.position="bottom") +
-  labs(x = "-log10 q-value TF DEGs",y = "Differential Peak Motif\nEnrichment -log10 p-value", title = "Differential Expression of\nEnriched Transcription Factors") 
-#geom_vline(xintercept = 0, linetype = "dotted") 
-
-# export plot
-ggsave(plot = PD1_CD57_volcano_plot_log10q, 
-       file = file.path(plotDir, "PD1_CD57_volcano_plot_log10q.pdf"),device = "pdf", width = 4, height = 4)
-
-
-#### Plot R vs NR log2 fold change with TF motif enrichment volcano plot ####
-
-# Load R vs NR significant transcripts within PD1 cluster and CD57 cluster
-# positive values mean increased expression in responders
-cluster_response_terms_CD57_sig <- read.csv(file =  "../EW_T1DAL_Results/cluster_response_terms_CD57_sig.csv")
-cluster_response_terms_PD1_sig <- read.csv(file =  "../EW_T1DAL_Results/cluster_response_terms_PD1_sig.csv")
-
-# make list of all enriched motifs
-PD1_matches_to_known_motifs_keep
-CD57_matches_to_known_motifs_keep
-
-# find R vs NR DEGs that are in the list of all enriched transcription factor motifs
-# only join with the PD1 or CD57 motif enrichment that is applicable to their gene list of interest
-cluster_response_terms_CD57_sig_motifs_CD57 <- CD57_matches_to_known_motifs_keep[str_to_upper(CD57_matches_to_known_motifs_keep$motif_name) %in% cluster_response_terms_CD57_sig$gene_short_name,] 
-# RUNX3 and TGIF1 overlapped here
-cluster_response_terms_PD1_sig_motifs_PD1 <- PD1_matches_to_known_motifs_keep[str_to_upper(PD1_matches_to_known_motifs_keep$motif_name) %in% cluster_response_terms_PD1_sig$gene_short_name,] 
-# no overlaps 
-
-# Join HOMER p-value for motif as a whole and DEG log expression
-# remember: normalized effect is the log2 fold change normalized by the intercept https://github.com/cole-trapnell-lab/monocle3/issues/307
-
-cluster_response_terms_CD57_sig_motifs_CD57_heatmap <- cluster_response_terms_CD57_sig_motifs_CD57 %>% 
-  separate(motif_match, into = c("motif_number","motif_match_number")) %>%
-  # join motif information for that entire motif to get enrichment p value
-  left_join(.,CD57_motif_information, by = "motif_number") %>%
-  dplyr::rename(gene_short_name = "motif_name.x") %>%
-  mutate(gene_short_name = str_to_upper(gene_short_name)) %>%
-  # join DEG info 
-  left_join(., cluster_response_terms_CD57_sig) %>%
-  mutate(group = "Responders")
-
-## Plot volcano
-CD57_R_vs_NR_TF_volcano_plot <- ggplot(cluster_response_terms_CD57_sig_motifs_CD57_heatmap, 
-                                       aes(y = -log10(p_value), x = normalized_effect, color = group,
-                                           label = gene_short_name)) +
-  theme_minimal() +
-  geom_point(size = 2) +
-  ggrepel::geom_text_repel(color = "black", size = 5, max.overlaps = 10 ) +
-  scale_color_manual(values = c("#5ba965")) +
-  theme(legend.title= element_blank(), legend.text = element_text(size = 12), text = element_text(size = 12),
-        legend.position="bottom") +
-  labs(x = "log2 Fold Change of CD57+ TF DEGs",y = "Differential Peak Motif\nEnrichment p-value", title = "CD57 Cluster R vs NR\nDifferential Expression of Enriched TFs") +
-  geom_vline(xintercept = 0, linetype = "dotted") 
-
-# export plot
-ggsave(plot = CD57_R_vs_NR_TF_volcano_plot, 
-       file = file.path(plotDir, "CD57_R_vs_NR_TF_volcano_plot.pdf"),device = "pdf", width = 4, height = 4)
-
-### Replot PD1 vs CD57 volcano adding label for RUNX3 and TGIF1
-
-## Join together tables for joint volcano plotting
-PD1_CD57_volcano_labels <- PD1_CD57_volcano 
-PD1_CD57_volcano_labels[PD1_CD57_volcano_labels$gene_short_name == "RUNX3",31] <- "R vs. NR\nOverlap"
-PD1_CD57_volcano_labels[PD1_CD57_volcano_labels$gene_short_name == "TGIF1",31] <- "R vs. NR\nOverlap"
-
-## Plot volcano
-PD1_CD57_volcano_labels_plot <- ggplot(PD1_CD57_volcano_labels, aes(y = -log10(p_value), x = normalized_effect, 
-                                                                    color = group, label = gene_short_name)) +
-  theme_minimal() +
-  geom_point(size = 2) +
-  ggrepel::geom_text_repel(color = "black", size = 5, max.overlaps = 10 ) +
-  #annotate("text", x = -1, y = 6.5, label = "PPI enrichment\np-value 2.74e-07", size = 3) +
-  scale_color_manual(values = c("#ba4d4cc7", "#fdbf6fff", "gray")) +
-  theme(legend.title= element_blank(), legend.text = element_text(size = 12), text = element_text(size = 12),
-        legend.position="bottom") +
-  labs(x = "log2 Fold Change of TF DEGs",y = "Differential Peak Motif\nEnrichment p-value", title = "Differential Expression of\nEnriched Transcription Factors") +
-  geom_vline(xintercept = 0, linetype = "dotted") 
-
-# export plot
-ggsave(plot = PD1_CD57_volcano_labels_plot, 
-       file = file.path(plotDir, "PD1_CD57_volcano_labels_plot.pdf"),device = "pdf", width = 4, height = 4)
-
 
 #### FIND DEGs within chromatin regions defined by GREAT ####
 
@@ -609,7 +525,8 @@ for (row in 1:nrow(PD1_GREAT_genes_DEG_sep_ATAC_seq_filter)) {
 
 PD1_TCF7_hits_unique <- PD1_TCF7_hits %>% distinct(motif, gene_short_name, pvalue)
 
-#### PLOT VOLCANO PLOT OF INDIVIDUAL GENE RANGE MOTIF ENRICHMENT ####
+
+#### FIGURE 4C: PLOT RESULTS AS PROTEIN-PROTEIN INTERACTION NETWORK FOR GENES WITH TF MOTIF ####
 
 # create matrix for each list of TFs
 CD57_TBX21_hits_unique_matrix <- CD57_TBX21_hits_unique %>% 
@@ -628,12 +545,6 @@ PD1_TCF7_hits_unique_matrix <- PD1_TCF7_hits_unique %>%
   column_to_rownames("gene_short_name")
 PD1_TCF7_hits_unique_matrix$pvalue <- as.numeric(PD1_TCF7_hits_unique_matrix$pvalue)
 
-# plot heatmaps
-ComplexHeatmap::Heatmap(CD57_TBX21_hits_unique_matrix)
-ComplexHeatmap::Heatmap(PD1_TCF7_hits_unique_matrix)
-
-#### PLOT AS NETWORK PLOT ####
-
 # create edge df
 CD57_TBX21_hits_network_edge <- CD57_TBX21_hits_unique_matrix %>% rownames_to_column("node2") %>%
   mutate(node1 = "TBX21", score = -log10(pvalue)) %>% 
@@ -642,61 +553,8 @@ PD1_TCF7_hits_network_edge <- PD1_TCF7_hits_unique_matrix %>% rownames_to_column
   mutate(node1 = "TCF7", score = -log10(pvalue)) %>% 
   dplyr::select(node1, node2, pvalue, score)
 
-# create node df 
-CD57_TBX21_hits_network_node <- data.frame(gene_short_name = unique(c(CD57_TBX21_hits_network_edge$node1, CD57_TBX21_hits_network_edge$node2))) %>% 
-  left_join( cluster_ex_terms_sig_down_CD57) %>%
-  dplyr::rename(node = gene_short_name) %>%
-  mutate(type = case_when(node == "TBX21" ~"TBX21",
-                          node!="TBX21"~"DEG")) %>%
-  mutate(normalized_effect = normalized_effect *-1)
 
-PD1_TCF7_hits_network_node <- data.frame(gene_short_name = unique(c(PD1_TCF7_hits_network_edge $node1, PD1_TCF7_hits_network_edge$node2))) %>% 
-  left_join( cluster_ex_terms_sig_up_PD1) %>%
-  dplyr::rename(node = gene_short_name) %>%
-  mutate(type = case_when(node == "TCF7" ~"TCF7",
-                          node!="TCF7"~"DEG")) 
-# create network
-CD57_TBX21_hits_network <- graph_from_data_frame(d=CD57_TBX21_hits_network_edge , 
-                                                 vertices=CD57_TBX21_hits_network_node, directed = F) 
-
-PD1_TCF7_hits_network <- graph_from_data_frame(d=PD1_TCF7_hits_network_edge, 
-                                               vertices=PD1_TCF7_hits_network_node, directed = F) 
-
-# plot networks
-# view igraph plotting parameters
-#?igraph.plotting
-# Set node size
-V(CD57_TBX21_hits_network)$size <- V(CD57_TBX21_hits_network)$normalized_effect*5
-V(PD1_TCF7_hits_network)$size <- V(PD1_TCF7_hits_network)$normalized_effect*5
-V(CD57_TBX21_hits_network)$color <- ifelse(V(CD57_TBX21_hits_network)$type == "TBX21", "#ba543d", "#93a24eff")
-V(PD1_TCF7_hits_network)$color <- ifelse(V(PD1_TCF7_hits_network)$type == "TCF7", "#6780d8", "#ba4d4cc7")
-
-# Set edge color 
-#E(upset_pairwise_net)$color = E(upset_pairwise_net)$edge_color
-
-l <- layout.reingold.tilford(CD57_TBX21_hits_network)
-# plot
-pdf(file = file.path(plotDir, "CD57_TBX21_hits_network.pdf") )
-plot(CD57_TBX21_hits_network, layout=-l[, 2:1], main = "CD57+ DEGs with TBX21 Motifs",  
-     label.font  = 2, vertex.label.color="black", 
-     edge.arrow.size = 0.5, 
-     vertex.label.cex = 1, 
-     vertex.label.dist=2,
-     xlim = c(-1,1),ylim=c(-1,1))
-dev.off()
-
-
-l_PD1 <- layout_as_tree(PD1_TCF7_hits_network)
-pdf(file = file.path(plotDir, "PD1_TCF7_hits_network.pdf"), width = 6, height = 6 )
-plot(PD1_TCF7_hits_network, layout = l_PD1, main = "PD-1+ DEGs with TCF7 Motifs",  
-     label.font  = 2, vertex.label.color="black", 
-     edge.arrow.size = 0.5, 
-     vertex.label.cex = 1, 
-     vertex.label.dist=2)
-dev.off()
-
-#### PLOT INSTEAD AS BUBBLE PLOT ####
-
+# THIS WAS ORIGINALLY FORMATTED TO BE BUBBLE PLOT, BUT PLOT WAS REMOVED FROM PAPER
 CD57_TBX21_hits_network_bubble <- CD57_TBX21_hits_network_edge %>% dplyr::rename(node = node2) %>% 
   left_join(CD57_TBX21_hits_network_node) %>% mutate(group = "CD57+ Tex", `-log10(p-value)` = -log10(pvalue)) %>%
   dplyr::rename(LFC = normalized_effect)
@@ -704,27 +562,6 @@ CD57_TBX21_hits_network_bubble <- CD57_TBX21_hits_network_edge %>% dplyr::rename
 PD1_TCF7_hits_network_bubble <- PD1_TCF7_hits_network_edge %>% dplyr::rename(node = node2) %>% 
   left_join(PD1_TCF7_hits_network_node) %>%  mutate(group = "PD-1+ Tex", `-log10(p-value)` = -log10(pvalue)) %>%
   dplyr::rename(LFC = normalized_effect)
-
-# plot as bubble plot
-CD57_TBX21_hits_network_bubble_plot <- ggplot(CD57_TBX21_hits_network_bubble, aes(y = group, x = reorder(node, LFC), size = LFC, color = `-log10(p-value)`)) +
-  geom_point() + theme_minimal() + labs(x = element_blank(), y = "DEG Gene Name", title = "CD57+ Tex DEGs\nwith TBX21 Motifs") + scale_color_viridis_c() + 
-  theme(text = element_text(size = 12, face = "bold"),  
-        #legend.position = "bottom", 
-        legend.box = "vertical", 
-        plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90)) 
-
-PD1_TCF7_hits_network_bubble_plot <- ggplot(PD1_TCF7_hits_network_bubble, aes(y = group, x = reorder(node, LFC), size = LFC, color = `-log10(p-value)`)) +
-  geom_point() + theme_minimal() + labs(x = element_blank(), y = "DEG Gene Name", title = "PD-1+ Tex DEGs\nwith TCF7 Motifs") + scale_color_viridis_c()+ 
-  theme(text = element_text(size = 12, face = "bold") ,
-        #legend.position = "bottom", 
-        legend.box = "vertical",
-        plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle = 90)) 
-
-bubble_plots <- egg::ggarrange(CD57_TBX21_hits_network_bubble_plot,PD1_TCF7_hits_network_bubble_plot , ncol = 2, nrow = 1)
-ggsave(bubble_plots, file = file.path(plotDir, "TF_DEG_bubble_plots.pdf"), height = 5, width = 17)
-
-#### PLOT RESULTS AS PROTEIN-PROTEIN INTERACTION NETWORK FOR GENES WITH TF MOTIF ####
 
 # export tables with the TF motif data and DEG data combined
 
@@ -773,7 +610,7 @@ E(PD1_TCF7_string_interactions_net)$width <- E(PD1_TCF7_string_interactions_net)
 # Set edge color 
 #E(upset_pairwise_net)$color = E(upset_pairwise_net)$edge_color
 
-# plot
+# plot FIGURE 4C
 pdf(file = file.path(plotDir, "CD57_TBX21_string_interactions_network.pdf"), width = 5, height =5 )
 plot(CD57_TBX21_string_interactions_net, main = "CD57+ Tex DEGs with TBX21 Motifs\nPPI enrichment P-value = 4.38e-05",  
      label.font  = 2, vertex.label.color="black", vertex.label.cex = 1, 
