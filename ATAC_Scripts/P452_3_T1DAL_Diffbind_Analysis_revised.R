@@ -585,7 +585,7 @@ write.csv(Venn_CD57minus_CD57pos_vsDN_onlyB_up_start, file = file.path(resultDir
 
 # also export all overlapping annotated up sites
 
-# Sheet below is TABLE S2 
+# Sheet below is TABLE S2 Sheet 3 "Shared_Up_0.05"
 write.csv(Venn_CD57minus_CD57pos_vsDN_in_all, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_in_all_up.csv"), row.names = FALSE)
 
 write.csv(Venn_CD57minus_CD57pos_vsDN_onlyA, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_onlyA_up.csv"), row.names = FALSE)
