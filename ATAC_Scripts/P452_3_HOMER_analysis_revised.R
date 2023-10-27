@@ -372,6 +372,8 @@ write.csv(PD1_GREAT_genes_DEG_sep_ATAC_window_full,file = file.path(homerDir, "P
 
 #### SCAN GREAT REGIONS FOR KEY TF MOTIFS ####
 
+load(file = file.path(resultDir, "mart.Rdata"))
+
 ## First extract sequence ranges identified by GREAT with DEGS in them using biostrings
 CD57_GREAT_genes_DEG_sep_ATAC_window_full_ranges <- CD57_GREAT_genes_DEG_sep_ATAC_window_full[,c("chr","start","end","gene_short_name")]
 PD1_GREAT_genes_DEG_sep_ATAC_window_full_ranges <- PD1_GREAT_genes_DEG_sep_ATAC_window_full[,c("chr","start","end","gene_short_name","region_og")]
@@ -528,6 +530,7 @@ PD1_TCF7_hits_unique <- PD1_TCF7_hits %>% distinct(motif, gene_short_name, pvalu
 
 #### FIGURE 4C: PLOT RESULTS AS PROTEIN-PROTEIN INTERACTION NETWORK FOR GENES WITH TF MOTIF ####
 
+# originally wrote code below to text plotting just as a network
 # create matrix for each list of TFs
 CD57_TBX21_hits_unique_matrix <- CD57_TBX21_hits_unique %>% 
   # keep lowest p-value hit per gene name
@@ -553,6 +556,19 @@ PD1_TCF7_hits_network_edge <- PD1_TCF7_hits_unique_matrix %>% rownames_to_column
   mutate(node1 = "TCF7", score = -log10(pvalue)) %>% 
   dplyr::select(node1, node2, pvalue, score)
 
+# create node df 
+CD57_TBX21_hits_network_node <- data.frame(gene_short_name = unique(c(CD57_TBX21_hits_network_edge$node1, CD57_TBX21_hits_network_edge$node2))) %>% 
+  left_join( cluster_ex_terms_sig_down_CD57) %>%
+  dplyr::rename(node = gene_short_name) %>%
+  mutate(type = case_when(node == "TBX21" ~"TBX21",
+                          node!="TBX21"~"DEG")) %>%
+  mutate(normalized_effect = normalized_effect *-1)
+
+PD1_TCF7_hits_network_node <- data.frame(gene_short_name = unique(c(PD1_TCF7_hits_network_edge $node1, PD1_TCF7_hits_network_edge$node2))) %>% 
+  left_join( cluster_ex_terms_sig_up_PD1) %>%
+  dplyr::rename(node = gene_short_name) %>%
+  mutate(type = case_when(node == "TCF7" ~"TCF7",
+                          node!="TCF7"~"DEG")) 
 
 # THIS WAS ORIGINALLY FORMATTED TO BE BUBBLE PLOT, BUT PLOT WAS REMOVED FROM PAPER
 CD57_TBX21_hits_network_bubble <- CD57_TBX21_hits_network_edge %>% dplyr::rename(node = node2) %>% 
