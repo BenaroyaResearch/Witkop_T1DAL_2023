@@ -66,9 +66,9 @@ annoFileName = "P452-3 Repeat Final Annotation.xlsx"
 
 # Paths 
 baseDir <- "/Users/ewitkop/Box/EW_Bioinformatics_Postdoc_Research/T1DAL_10X_Project/ANALYSIS_FILES"
-plotDir <- file.path(baseDir,'T1DAL_cleanup/FIGURES/ATAC_REPEAT_FIGURES')
+plotDir <- file.path(baseDir,'FIGURES/ATAC_REPEAT_FIGURES')
 resultDir <- file.path(baseDir,'P452_3_SAVED_DATA')
-test_save <- file.path(baseDir,'T1DAL_cleanup/P452_3_SAVED_DATA')
+test_save <- file.path(baseDir,'P452_3_SAVED_DATA')
 annotationDir <- file.path(baseDir, "RAW_DATA/P452_3/")
 
 fragmentDir <- file.path("/Volumes/Bioinformatics/pipeline/Illumina/220802_VH00126_203_AAAMVKNHV/Project_P452-3Processed_globus_220807/insertSizes")
