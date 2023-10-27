@@ -88,7 +88,7 @@ P452_3_sample_sheet <- read_csv(file.path(annotationDir,"/for analyst/02Aug2022_
 # load previously formatted samplesheet
 samplesheet_P452_3 <- read.csv(file = file.path(resultDir, "samplesheet_P452_3.csv")) %>% dplyr::select(-X)
 
-#### LOAD AND PRE-PROCESS ALL ATAC DATA ####
+#### FIGURE 1B: LOAD AND PRE-PROCESS ALL ATAC DATA ####
 
 ## RUN PEAKCOUNTING PROCEDURE ON ISILON FOR INCREASED MEMORY
 # USE SCRIPT P452_3_T1DAL_Count.R
@@ -579,16 +579,19 @@ nrow(Venn_CD57minus_CD57pos_vsDN_onlyA_up_start) # 322
 Venn_CD57minus_CD57pos_vsDN_onlyB_up_start <- Venn_CD57minus_CD57pos_vsDN_onlyB %>% dplyr::filter(insideFeature == "overlapStart")
 nrow(Venn_CD57minus_CD57pos_vsDN_onlyB_up_start)
 
-#write.csv(Venn_CD57minus_CD57pos_vsDN_in_all_up_start, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_in_all_up_start.csv"), row.names = FALSE)
-#write.csv(Venn_CD57minus_CD57pos_vsDN_onlyA_up_start, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_onlyA_up_start.csv"), row.names = FALSE)
-#write.csv(Venn_CD57minus_CD57pos_vsDN_onlyB_up_start, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_onlyB_up_start.csv"), row.names = FALSE)
+write.csv(Venn_CD57minus_CD57pos_vsDN_in_all_up_start, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_in_all_up_start.csv"), row.names = FALSE)
+write.csv(Venn_CD57minus_CD57pos_vsDN_onlyA_up_start, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_onlyA_up_start.csv"), row.names = FALSE)
+write.csv(Venn_CD57minus_CD57pos_vsDN_onlyB_up_start, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_onlyB_up_start.csv"), row.names = FALSE)
 
 # also export all overlapping annotated up sites
-#write.csv(Venn_CD57minus_CD57pos_vsDN_in_all, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_in_all_up.csv"), row.names = FALSE)
-#write.csv(Venn_CD57minus_CD57pos_vsDN_onlyA, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_onlyA_up.csv"), row.names = FALSE)
-#write.csv(Venn_CD57minus_CD57pos_vsDN_onlyB, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_onlyB_up.csv"), row.names = FALSE)
 
-## PLOT FIGURE S2 venn diagram
+# Sheet below is TABLE S2 
+write.csv(Venn_CD57minus_CD57pos_vsDN_in_all, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_in_all_up.csv"), row.names = FALSE)
+
+write.csv(Venn_CD57minus_CD57pos_vsDN_onlyA, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_onlyA_up.csv"), row.names = FALSE)
+write.csv(Venn_CD57minus_CD57pos_vsDN_onlyB, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_onlyB_up.csv"), row.names = FALSE)
+
+## PLOT FIGURE S2 Sheet 3 venn diagram
 ## plot the Venn diagram with shared up sites only
 # Input in the form of a named numeric vector
 fit2 <- euler(c(
