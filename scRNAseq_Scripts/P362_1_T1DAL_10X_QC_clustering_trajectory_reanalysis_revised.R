@@ -1,10 +1,5 @@
 #### P362-1 T1DAL 10X QC Re-analysis ####
 
-### This code re-runs and adds comments to the original analysis in
-#2020-09-02 P362-1 T1DAL 10X analysis - DGEA analysis.Rmd script by K. Diggins
-#https://github.com/BenaroyaResearch/Kediggins_Linsley_T1DAL_10X_GEX_and_TCR/blob/main/2020-09-02%20P362-1%20T1DAL%2010X%20analysis%20-%20DGEA%20analysis.Rmd 
-# this original script included QC, clustering, and trajectory analysis
-
 # This QC generates the clustering output that is saved and used in 
 # the subsequent analysis script 
 
