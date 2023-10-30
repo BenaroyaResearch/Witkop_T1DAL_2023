@@ -306,6 +306,263 @@ save(tcr_metrics, tcrs, all_cloneID_data, cds_metadata_with_clones, cds_metadata
 # save all_libs_tcrs separately, since I'm exporting at a later date and don't want to overright previously saved data
 save(all_libs_tcrs, file = "./EW_T1DAL_Results/all_libs_tcrs.Rdata")
 
+
+#### Calculate Jaccard similarity index between clusters ####
+
+# The Jaccard similarity index = number observations in both sets/ number observations in either set
+# The index ranges between 0 and 1 and closer to 1 is a higher Jaccard similarity index
+
+# Define the Jaccard similarity function - this function produces unexpected results where
+# the same two sets do not equal 1 when compared! Do not use but kept here for reference
+# in case you see it suggested!
+jaccard <- function(a, b) {
+  intersection = length(intersect(a, b))
+  union = length(a) + length(b) - intersection
+  return (intersection/union)
+}
+
+# Use this function instead! from here https://www.geeksforgeeks.org/how-to-calculate-jaccard-similarity-in-r/
+#install.packages("bayesbio")
+# Compute similarity between list of strings overall 
+bayesbio::jaccardSets(cluster1, cluster1)
+
+# Write loop to calculate the Jaccard similarity index over each cluster (which I should have done for the K.S. analysis)
+
+cluster_list1 <- levels(cds_metadata_ordered$Cluster.Name)
+
+# Calculate the Jaccard similarity index between treatments within each cluster
+
+for (i in cluster_list1) {
+  
+  R_KS_clone <- cds_metadata_ordered %>% filter(Response == "R" & Cluster.Name == !!i ) %>% select(cloneID) %>% filter(!is.na(cloneID))
+  R_KS_clone <- R_KS_clone[,1]
+  NR_KS_clone <- cds_metadata_ordered %>% filter(Response == "NR" & Cluster.Name == !!i ) %>% select(cloneID) %>% filter(!is.na(cloneID))
+  NR_KS_clone <- NR_KS_clone[,1]
+  print(i)
+  print(bayesbio::jaccardSets(R_KS_clone,NR_KS_clone))
+  
+}
+
+# [1] "1"
+# [1] 0
+# [1] "2"
+# [1] 0.002299732
+# [1] "3"
+# [1] 0.0009746589
+# [1] "4"
+# [1] 0.001846154
+# [1] "5"
+# [1] 0.0027894
+# [1] "6"
+# [1] 0.004166667
+# [1] "7"
+# [1] 0.002594034
+# [1] "8"
+# [1] 0.003546099
+# [1] "9"
+# [1] 0
+
+# Results between treatments
+
+
+## Calculate the Jaccard similarity overall between clusters
+cluster_list <- list(cluster1 = cluster1,
+                     cluster2 = cluster2,
+                     cluster3 = cluster3,
+                     cluster4 = cluster4,
+                     cluster5 = cluster5,
+                     cluster6 = cluster6,
+                     cluster7 = cluster7,
+                     cluster8 = cluster8)
+
+# get vector of clusters for each cluster
+cluster1 <- cds_metadata_ordered %>% filter(Cluster.Name == 1 ) %>% select(cloneID) %>% filter(!is.na(cloneID))
+cluster1 <- cluster1[,1]
+cluster2 <- cds_metadata_ordered %>% filter(Cluster.Name == 2 ) %>% select(cloneID) %>% filter(!is.na(cloneID))
+cluster2 <- cluster2[,1]
+cluster3 <- cds_metadata_ordered %>% filter(Cluster.Name == 3) %>% select(cloneID) %>% filter(!is.na(cloneID))
+cluster3 <- cluster3[,1]
+cluster4 <- cds_metadata_ordered %>% filter(Cluster.Name == 4 ) %>% select(cloneID) %>% filter(!is.na(cloneID))
+cluster4 <- cluster4[,1]
+cluster5 <- cds_metadata_ordered %>% filter(Cluster.Name == 5 ) %>% select(cloneID) %>% filter(!is.na(cloneID))
+cluster5 <- cluster5[,1]
+cluster6 <- cds_metadata_ordered %>% filter(Cluster.Name == 6 ) %>% select(cloneID) %>% filter(!is.na(cloneID))
+cluster6 <- cluster6[,1]
+cluster7 <- cds_metadata_ordered %>% filter(Cluster.Name == 7 ) %>% select(cloneID) %>% filter(!is.na(cloneID))
+cluster7 <- cluster7[,1]
+cluster8 <- cds_metadata_ordered %>% filter(Cluster.Name == 8 ) %>% select(cloneID) %>% filter(!is.na(cloneID))
+cluster8 <- cluster8[,1]
+
+
+## Create empty dataframe to house jaccard output
+compare_clones_jaccard_df <- data.frame(Cluster1 = character(),
+                                        Cluster2 = character(),
+                                        Jaccard = numeric())
+
+# calculate for cluster 1 and add to df
+for (name in names(cluster_list)) {
+  c <- name
+  # Calculate the Jaccard similarity index for each set of clones
+  new <- data.frame( Cluster1 = "cluster1",
+                     Cluster2 = c,
+                     Jaccard = jaccardSets(cluster1, cluster_list[[name]]))
+  # Create new row
+  compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
+}
+
+# calculate for cluster 2 and add to df
+for (name in names(cluster_list)) {
+  c <- name
+  
+  # Calculate the Jaccard similarity index for each set of clones
+  new <- data.frame( Cluster1 = "cluster2",
+                     Cluster2 = c,
+                     Jaccard = jaccardSets(cluster2, cluster_list[[name]] ) ) # Create new row
+  compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
+}
+
+# calculate for cluster 3 and add to df
+for (name in names(cluster_list)) {
+  c <- name
+  
+  # Calculate the Jaccard similarity index for each set of clones
+  new <- data.frame( Cluster1 = "cluster3",
+                     Cluster2 = c,
+                     Jaccard = jaccardSets(cluster3, cluster_list[[name]] ) ) # Create new row
+  compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
+}
+
+# calculate for cluster 4 and add to df
+for (name in names(cluster_list)) {
+  c <- name
+  
+  # Calculate the Jaccard similarity index for each set of clones
+  new <- data.frame( Cluster1 = "cluster4",
+                     Cluster2 = c,
+                     Jaccard = jaccardSets(cluster4, cluster_list[[name]] ) ) # Create new row
+  compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
+}
+
+# calculate for cluster 5 and add to df
+for (name in names(cluster_list)) {
+  c <- name
+  
+  # Calculate the Jaccard similarity index for each set of clones
+  new <- data.frame( Cluster1 = "cluster5",
+                     Cluster2 = c,
+                     Jaccard = jaccardSets(cluster5, cluster_list[[name]] ) ) # Create new row
+  compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
+}
+
+# calculate for cluster 6 and add to df
+for (name in names(cluster_list)) {
+  c <- name
+  
+  # Calculate the Jaccard similarity index for each set of clones
+  new <- data.frame( Cluster1 = "cluster6",
+                     Cluster2 = c,
+                     Jaccard = jaccardSets(cluster6, cluster_list[[name]] ) ) # Create new row
+  compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
+}
+
+# calculate for cluster 7 and add to df
+for (name in names(cluster_list)) {
+  c <- name
+  
+  # Calculate the Jaccard similarity index for each set of clones
+  new <- data.frame( Cluster1 = "cluster7",
+                     Cluster2 = c,
+                     Jaccard = jaccardSets(cluster7, cluster_list[[name]] ) ) # Create new row
+  compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
+}
+
+# calculate for cluster 8 and add to df
+for (name in names(cluster_list)) {
+  c <- name
+  
+  # Calculate the Jaccard similarity index for each set of clones
+  new <- data.frame( Cluster1 = "cluster8",
+                     Cluster2 = c,
+                     Jaccard = jaccardSets(cluster8, cluster_list[[name]] ) ) # Create new row
+  compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
+}
+
+
+### Create clone sharing heatmap plot using Complex Heatmap 
+
+# set the cluster1 as column and cluster 2 as rows with values in the middle
+compare_clones_jaccard_df_spread <- spread(compare_clones_jaccard_df, Cluster1, Jaccard, fill = 0)
+rownames(compare_clones_jaccard_df_spread) <- compare_clones_jaccard_df_spread$Cluster2 
+compare_clones_jaccard_df_spread <- compare_clones_jaccard_df_spread[,-1]
+
+# make into matrix 
+compare_clones_jaccard_df_mat <- as.matrix(compare_clones_jaccard_df_spread)
+
+# Plot heatmap, where 1 = perfect match 
+pdf(file = "./FIGURES/TCR_clone_jaccard_heatmap.png",height = 5, width = 5)
+ComplexHeatmap::Heatmap(compare_clones_jaccard_df_mat)
+dev.off()
+
+## Figure 2b: heatmap showing matrix of jaccard similarity - code from line 728
+
+## set the cluster1 as column and cluster 2 as rows with values in the middle
+#compare_clones_jaccard_df_spread <- spread(compare_clones_jaccard_df, Cluster1, Jaccard, fill = 0)
+#rownames(compare_clones_jaccard_df_spread) <- compare_clones_jaccard_df_spread$Cluster2 
+#compare_clones_jaccard_df_spread <- compare_clones_jaccard_df_spread[,-1]
+#
+## make into matrix 
+#compare_clones_jaccard_df_mat <- as.matrix(compare_clones_jaccard_df_spread)
+#
+## Plot heatmap, where 1 = perfect match 
+#pdf(file = "./FIGURES/TCR_clone_jaccard_heatmap.png",height = 5, width = 5)
+
+# make color palette
+
+pdf(file = "./FIGURES/jaccard_similarity_heatmap.pdf", width = 4.5, height = 4)
+#jaccard_similarity_heatmap <- ComplexHeatmap::Heatmap(compare_clones_jaccard_df_mat, 
+#                                                      heatmap_legend_param =  list(title= "Jaccard\nSimilarity\nValue"),
+#                                                      col = brewer.pal(7,   "PRGn"))
+#                                                      # brewer.pal("spectral"))
+
+ComplexHeatmap::Heatmap(compare_clones_jaccard_df_mat, 
+                        heatmap_legend_param =  list(title= "Jaccard\nSimilarity\nValue"),
+                        col = brewer.pal(7,   "PRGn"))
+dev.off()
+# make heatmap into a grob
+jaccard_similarity_heatmap_grob <- grid.grabExpr(draw(jaccard_similarity_heatmap))
+
+# Plot heatmap with redundant values removed
+# Get lower triangle of the correlation matrix
+get_lower_tri<-function(cormat){
+  cormat[upper.tri(cormat)] <- NA
+  return(cormat)
+}
+# Get upper triangle of the correlation matrix
+get_upper_tri <- function(cormat){
+  cormat[lower.tri(cormat)]<- NA
+  return(cormat)
+}
+lower_jaccard <- get_lower_tri(compare_clones_jaccard_df_mat)
+upper_jaccard <- get_upper_tri(compare_clones_jaccard_df_mat)
+
+ComplexHeatmap::Heatmap(lower_jaccard, 
+                        heatmap_legend_param =  list(title= "Jaccard\nSimilarity\nValue"),
+                        col = brewer.pal(7,   "PRGn"))
+
+pdf(file = "./FIGURES/jaccard_similarity_heatmap_upper.pdf", width = 4.5, height = 4)
+ComplexHeatmap::Heatmap(upper_jaccard, 
+                        heatmap_legend_param =  list(title= "Jaccard\nSimilarity\nValue"),
+                        col = brewer.pal(7,   "PRGn"))
+dev.off()
+
+pdf(file = "./FIGURES/jaccard_similarity_heatmap_upper_purple.pdf", width = 4.5, height = 4)
+ComplexHeatmap::Heatmap(upper_jaccard, 
+                        heatmap_legend_param =  list(title= "TCR\nRepertoire\nOverlap"),
+                        col = c("#F7F7F7"  , "#b44dc6c7","#762A83"))
+dev.off()
+
+
+
 #### CALCULATE TCR SHARING MANUALLY USING V,J CDR3_NT AND REPEAT ANALYES BELOW ####
 
 #View(all_libs_tcrs)
