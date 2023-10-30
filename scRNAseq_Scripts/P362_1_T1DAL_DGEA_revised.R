@@ -57,7 +57,7 @@ T1DAL_ITN_ID_dictionary$masked_public_PID <- str_remove(T1DAL_ITN_ID_dictionary$
 
 donor_colors <- c("#bb5595", "#8fb03d", "#6677db", "#c99f3b", "#583687", "#66a453", "#c26ac6", "#45c097", "#b64468", "#848bd3", "#ab7434", "#bb4c41")
 
-#### FIGURE S8 : Find top marker genes expressed by each cluster with cluster 9 removed ####
+#### FIGURE S8: Find top marker genes expressed by each cluster with cluster 9 removed ####
 
 # Use top_markers to ask what genes make clusters different from one another
 # only re-run top_markers if necessary, it takes a long time to run
