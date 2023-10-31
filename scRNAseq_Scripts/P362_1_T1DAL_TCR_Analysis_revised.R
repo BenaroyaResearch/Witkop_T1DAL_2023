@@ -1,6 +1,6 @@
 #### P-362-1 T1DAL TCR ReAnalysis ####
 
-# this script assess patterns of TCR sharing
+# this script assesses patterns of TCR sharing
 
 #### LOAD LIBRARIES ####
 
@@ -199,14 +199,6 @@ tcr_graph_output_all = tcrGraph::makeTcrGraph(all_libs_tcrs,link="cdr3_nt")
 tcrGraph_clones_all <- tcrGraph::getClonesFromTcrGraph(tcr_graph_output_all, link = "cdr3_nt")
 save(tcrGraph_clones_all,file="EW_T1DAL_Results/tcrGraph output.Rdata")
 
-# Make TCR vis network - this takes a long time to run 
-#pdf(file = "./FIGURES/tcr_visnetwork.pdf", width = 10, height =10 )
-#tcrGraph::makeVisNetwork(tcr_graph_output_all)
-#dev.off()
-
-## Calculate some summary stats
-nrow(tcrGraph_clones_all) # 10178 total clones
-
 #### MERGE TCR GRAPH DATA WITH NETWORK DATA ####
 
 ### Reformat output from TCR graph to merge with colData(cds_all) 
@@ -272,7 +264,7 @@ colData(cds_all)$barcode_donorID <- cds_metadata$barcode_donorID
 
 head(colData(cds_all))
 
-#### Calculate and Plot UMAP with TCR NT Clone Counts ####
+#### Calculate and Plot UMAP with TCR Clone Counts ####
 
 # Calculate clone counts and add to data frame
 clone_counts <- colData(cds_all)$clone_count
@@ -291,7 +283,6 @@ cds_all_ordered <- cds_all[,cds_metadata_ordered$barcode_original]
 
 # Plot cell trajectory with clone count information by response
 clone_count_UMAP <- plot_cells(cds_all_ordered,color_cells_by="clone_count",show_trajectory_graph = F, cell_size=2) + facet_grid(~Response)
-ggsave(clone_count_UMAP, file = "./FIGURES/clone_count_UMAP.tiff", device  = "tiff", width = 10, height =5 )
 
 #### SAVE TCR ANALYSIS OUTPUT DATAFRAMES ####
 
@@ -306,74 +297,18 @@ save(tcr_metrics, tcrs, all_cloneID_data, cds_metadata_with_clones, cds_metadata
 # save all_libs_tcrs separately, since I'm exporting at a later date and don't want to overright previously saved data
 save(all_libs_tcrs, file = "./EW_T1DAL_Results/all_libs_tcrs.Rdata")
 
-
-#### Calculate Jaccard similarity index between clusters ####
+#### FIGURE 5B: Calculate Jaccard similarity index between clusters ####
 
 # The Jaccard similarity index = number observations in both sets/ number observations in either set
 # The index ranges between 0 and 1 and closer to 1 is a higher Jaccard similarity index
 
-# Define the Jaccard similarity function - this function produces unexpected results where
-# the same two sets do not equal 1 when compared! Do not use but kept here for reference
-# in case you see it suggested!
-jaccard <- function(a, b) {
-  intersection = length(intersect(a, b))
-  union = length(a) + length(b) - intersection
-  return (intersection/union)
-}
-
-# Use this function instead! from here https://www.geeksforgeeks.org/how-to-calculate-jaccard-similarity-in-r/
+# Use this function  from here https://www.geeksforgeeks.org/how-to-calculate-jaccard-similarity-in-r/
 #install.packages("bayesbio")
 # Compute similarity between list of strings overall 
 bayesbio::jaccardSets(cluster1, cluster1)
 
-# Write loop to calculate the Jaccard similarity index over each cluster (which I should have done for the K.S. analysis)
-
+# Write loop to calculate the Jaccard similarity index over each cluster 
 cluster_list1 <- levels(cds_metadata_ordered$Cluster.Name)
-
-# Calculate the Jaccard similarity index between treatments within each cluster
-
-for (i in cluster_list1) {
-  
-  R_KS_clone <- cds_metadata_ordered %>% filter(Response == "R" & Cluster.Name == !!i ) %>% select(cloneID) %>% filter(!is.na(cloneID))
-  R_KS_clone <- R_KS_clone[,1]
-  NR_KS_clone <- cds_metadata_ordered %>% filter(Response == "NR" & Cluster.Name == !!i ) %>% select(cloneID) %>% filter(!is.na(cloneID))
-  NR_KS_clone <- NR_KS_clone[,1]
-  print(i)
-  print(bayesbio::jaccardSets(R_KS_clone,NR_KS_clone))
-  
-}
-
-# [1] "1"
-# [1] 0
-# [1] "2"
-# [1] 0.002299732
-# [1] "3"
-# [1] 0.0009746589
-# [1] "4"
-# [1] 0.001846154
-# [1] "5"
-# [1] 0.0027894
-# [1] "6"
-# [1] 0.004166667
-# [1] "7"
-# [1] 0.002594034
-# [1] "8"
-# [1] 0.003546099
-# [1] "9"
-# [1] 0
-
-# Results between treatments
-
-
-## Calculate the Jaccard similarity overall between clusters
-cluster_list <- list(cluster1 = cluster1,
-                     cluster2 = cluster2,
-                     cluster3 = cluster3,
-                     cluster4 = cluster4,
-                     cluster5 = cluster5,
-                     cluster6 = cluster6,
-                     cluster7 = cluster7,
-                     cluster8 = cluster8)
 
 # get vector of clusters for each cluster
 cluster1 <- cds_metadata_ordered %>% filter(Cluster.Name == 1 ) %>% select(cloneID) %>% filter(!is.na(cloneID))
@@ -392,6 +327,16 @@ cluster7 <- cds_metadata_ordered %>% filter(Cluster.Name == 7 ) %>% select(clone
 cluster7 <- cluster7[,1]
 cluster8 <- cds_metadata_ordered %>% filter(Cluster.Name == 8 ) %>% select(cloneID) %>% filter(!is.na(cloneID))
 cluster8 <- cluster8[,1]
+
+## Calculate the Jaccard similarity overall between clusters
+cluster_list <- list(cluster1 = cluster1,
+                     cluster2 = cluster2,
+                     cluster3 = cluster3,
+                     cluster4 = cluster4,
+                     cluster5 = cluster5,
+                     cluster6 = cluster6,
+                     cluster7 = cluster7,
+                     cluster8 = cluster8)
 
 
 ## Create empty dataframe to house jaccard output
@@ -487,8 +432,9 @@ for (name in names(cluster_list)) {
   compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
 }
 
+compare_clones_jaccard_df
 
-### Create clone sharing heatmap plot using Complex Heatmap 
+### Create clone sharing heatmap ###
 
 # set the cluster1 as column and cluster 2 as rows with values in the middle
 compare_clones_jaccard_df_spread <- spread(compare_clones_jaccard_df, Cluster1, Jaccard, fill = 0)
@@ -498,38 +444,6 @@ compare_clones_jaccard_df_spread <- compare_clones_jaccard_df_spread[,-1]
 # make into matrix 
 compare_clones_jaccard_df_mat <- as.matrix(compare_clones_jaccard_df_spread)
 
-# Plot heatmap, where 1 = perfect match 
-pdf(file = "./FIGURES/TCR_clone_jaccard_heatmap.png",height = 5, width = 5)
-ComplexHeatmap::Heatmap(compare_clones_jaccard_df_mat)
-dev.off()
-
-## Figure 2b: heatmap showing matrix of jaccard similarity - code from line 728
-
-## set the cluster1 as column and cluster 2 as rows with values in the middle
-#compare_clones_jaccard_df_spread <- spread(compare_clones_jaccard_df, Cluster1, Jaccard, fill = 0)
-#rownames(compare_clones_jaccard_df_spread) <- compare_clones_jaccard_df_spread$Cluster2 
-#compare_clones_jaccard_df_spread <- compare_clones_jaccard_df_spread[,-1]
-#
-## make into matrix 
-#compare_clones_jaccard_df_mat <- as.matrix(compare_clones_jaccard_df_spread)
-#
-## Plot heatmap, where 1 = perfect match 
-#pdf(file = "./FIGURES/TCR_clone_jaccard_heatmap.png",height = 5, width = 5)
-
-# make color palette
-
-pdf(file = "./FIGURES/jaccard_similarity_heatmap.pdf", width = 4.5, height = 4)
-#jaccard_similarity_heatmap <- ComplexHeatmap::Heatmap(compare_clones_jaccard_df_mat, 
-#                                                      heatmap_legend_param =  list(title= "Jaccard\nSimilarity\nValue"),
-#                                                      col = brewer.pal(7,   "PRGn"))
-#                                                      # brewer.pal("spectral"))
-
-ComplexHeatmap::Heatmap(compare_clones_jaccard_df_mat, 
-                        heatmap_legend_param =  list(title= "Jaccard\nSimilarity\nValue"),
-                        col = brewer.pal(7,   "PRGn"))
-dev.off()
-# make heatmap into a grob
-jaccard_similarity_heatmap_grob <- grid.grabExpr(draw(jaccard_similarity_heatmap))
 
 # Plot heatmap with redundant values removed
 # Get lower triangle of the correlation matrix
@@ -545,23 +459,12 @@ get_upper_tri <- function(cormat){
 lower_jaccard <- get_lower_tri(compare_clones_jaccard_df_mat)
 upper_jaccard <- get_upper_tri(compare_clones_jaccard_df_mat)
 
-ComplexHeatmap::Heatmap(lower_jaccard, 
-                        heatmap_legend_param =  list(title= "Jaccard\nSimilarity\nValue"),
-                        col = brewer.pal(7,   "PRGn"))
-
-pdf(file = "./FIGURES/jaccard_similarity_heatmap_upper.pdf", width = 4.5, height = 4)
-ComplexHeatmap::Heatmap(upper_jaccard, 
-                        heatmap_legend_param =  list(title= "Jaccard\nSimilarity\nValue"),
-                        col = brewer.pal(7,   "PRGn"))
-dev.off()
-
+## Plot FIGURE 5B
 pdf(file = "./FIGURES/jaccard_similarity_heatmap_upper_purple.pdf", width = 4.5, height = 4)
 ComplexHeatmap::Heatmap(upper_jaccard, 
                         heatmap_legend_param =  list(title= "TCR\nRepertoire\nOverlap"),
                         col = c("#F7F7F7"  , "#b44dc6c7","#762A83"))
 dev.off()
-
-
 
 #### CALCULATE TCR SHARING MANUALLY USING V,J CDR3_NT AND REPEAT ANALYES BELOW ####
 
@@ -999,453 +902,7 @@ cells_in_clones_tcr_manual_grouped_ex_precursor_barplot_percent <- ggplot(cells_
 ggsave(cells_in_clones_tcr_manual_grouped_ex_precursor_barplot_percent, file = "./FIGURES/cells_in_clones_tcr_manual_grouped_ex_precursor_barplot_percent.pdf",
        width =3.5, height = 4)
 
-#### Calculate patterns of clonotype sharing between clusters by donor using Jaccard similarity ####
-
-# Goal: Calculate the Jaccard similarity between each cluster for each donor a
-# and then combine this all and plot as a heatmap to see if there are any patterns by group in
-# the similarity of TCR sharing between clusters
-
-# Use this function from here https://www.geeksforgeeks.org/how-to-calculate-jaccard-similarity-in-r/
-#install.packages("bayesbio")
-# Compute similarity between list of strings overall 
-bayesbio::jaccardSets(cluster1, cluster1)
-
-# get donor list
-donor_df <- data.frame(donor.ID = unique(cells_in_clones_tcr_manual$Donor.ID))
-nrow(donor_df) # 12 donors
-
-get_donor_jaccard <- function(i, tcr) {
-  
-  # get vector of unique tcr Alpha chains for each cluster
-  cluster1 <- tcr %>% filter(Donor.ID == i ) %>% filter(Cluster.Name == 1 ) %>% distinct(tcr_id_TRA) %>% filter(!is.na(tcr_id_TRA))
-  cluster1 <- cluster1[,1]
-  cluster2 <- tcr %>% filter(Donor.ID == i ) %>% filter(Cluster.Name == 2 ) %>% distinct(tcr_id_TRA) %>% filter(!is.na(tcr_id_TRA))
-  cluster2 <- cluster2[,1]
-  cluster3 <- tcr %>% filter(Donor.ID == i ) %>% filter(Cluster.Name == 3 ) %>% distinct(tcr_id_TRA) %>% filter(!is.na(tcr_id_TRA))
-  cluster3 <- cluster3[,1]
-  cluster4 <- tcr %>% filter(Donor.ID == i ) %>% filter(Cluster.Name == 4 ) %>% distinct(tcr_id_TRA) %>% filter(!is.na(tcr_id_TRA))
-  cluster4 <- cluster4[,1]
-  cluster5 <- tcr %>% filter(Donor.ID == i ) %>% filter(Cluster.Name == 5 ) %>% distinct(tcr_id_TRA) %>% filter(!is.na(tcr_id_TRA))
-  cluster5 <- cluster5[,1]
-  cluster6 <- tcr %>% filter(Donor.ID == i ) %>% filter(Cluster.Name == 6 ) %>% distinct(tcr_id_TRA) %>% filter(!is.na(tcr_id_TRA))
-  cluster6 <- cluster6[,1]
-  cluster7 <- tcr %>% filter(Donor.ID == i ) %>% filter(Cluster.Name == 7 ) %>% distinct(tcr_id_TRA) %>% filter(!is.na(tcr_id_TRA))
-  cluster7 <- cluster7[,1]
-  cluster8 <- tcr %>% filter(Donor.ID == i ) %>% filter(Cluster.Name == 8 ) %>% distinct(tcr_id_TRA) %>% filter(!is.na(tcr_id_TRA))
-  cluster8 <- cluster8[,1]
-  
-  # make cluster list
-  cluster_list <- list(cluster1 = cluster1,
-                       cluster2 = cluster2,
-                       cluster3 = cluster3,
-                       cluster4 = cluster4,
-                       cluster5 = cluster5,
-                       cluster6 = cluster6,
-                       cluster7 = cluster7,
-                       cluster8 = cluster8)
-  
-  ## Create empty dataframe to house jaccard output
-  compare_clones_jaccard_df <- data.frame(Cluster1 = character(),
-                                          Cluster2 = character(),
-                                          Jaccard = numeric())
-  
-  # calculate for cluster 1 and add to df
-  for (name in names(cluster_list)) {
-    c <- name
-    # Calculate the Jaccard similarity index for each set of clones
-    new <- data.frame( Cluster1 = "cluster1",
-                       Cluster2 = c,
-                       Jaccard = jaccardSets(cluster1, cluster_list[[name]]))
-    # Create new row
-    compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
-  }
-  
-  # calculate for cluster 2 and add to df
-  for (name in names(cluster_list)) {
-    c <- name
-    
-    # Calculate the Jaccard similarity index for each set of clones
-    new <- data.frame( Cluster1 = "cluster2",
-                       Cluster2 = c,
-                       Jaccard = jaccardSets(cluster2, cluster_list[[name]] ) ) # Create new row
-    compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
-  }
-  
-  # calculate for cluster 3 and add to df
-  for (name in names(cluster_list)) {
-    c <- name
-    
-    # Calculate the Jaccard similarity index for each set of clones
-    new <- data.frame( Cluster1 = "cluster3",
-                       Cluster2 = c,
-                       Jaccard = jaccardSets(cluster3, cluster_list[[name]] ) ) # Create new row
-    compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
-  }
-  
-  # calculate for cluster 4 and add to df
-  for (name in names(cluster_list)) {
-    c <- name
-    
-    # Calculate the Jaccard similarity index for each set of clones
-    new <- data.frame( Cluster1 = "cluster4",
-                       Cluster2 = c,
-                       Jaccard = jaccardSets(cluster4, cluster_list[[name]] ) ) # Create new row
-    compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
-  }
-  
-  # calculate for cluster 5 and add to df
-  for (name in names(cluster_list)) {
-    c <- name
-    
-    # Calculate the Jaccard similarity index for each set of clones
-    new <- data.frame( Cluster1 = "cluster5",
-                       Cluster2 = c,
-                       Jaccard = jaccardSets(cluster5, cluster_list[[name]] ) ) # Create new row
-    compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
-  }
-  
-  # calculate for cluster 6 and add to df
-  for (name in names(cluster_list)) {
-    c <- name
-    
-    # Calculate the Jaccard similarity index for each set of clones
-    new <- data.frame( Cluster1 = "cluster6",
-                       Cluster2 = c,
-                       Jaccard = jaccardSets(cluster6, cluster_list[[name]] ) ) # Create new row
-    compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
-  }
-  
-  # calculate for cluster 7 and add to df
-  for (name in names(cluster_list)) {
-    c <- name
-    
-    # Calculate the Jaccard similarity index for each set of clones
-    new <- data.frame( Cluster1 = "cluster7",
-                       Cluster2 = c,
-                       Jaccard = jaccardSets(cluster7, cluster_list[[name]] ) ) # Create new row
-    compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
-  }
-  
-  # calculate for cluster 8 and add to df
-  for (name in names(cluster_list)) {
-    c <- name
-    
-    # Calculate the Jaccard similarity index for each set of clones
-    new <- data.frame( Cluster1 = "cluster8",
-                       Cluster2 = c,
-                       Jaccard = jaccardSets(cluster8, cluster_list[[name]] ) ) # Create new row
-    compare_clones_jaccard_df[nrow(compare_clones_jaccard_df) + 1, ] <- new 
-  }
-  
-  compare_clones_jaccard_df$Donor.ID <- i
-  
-  compare_clones_jaccard_df
-}
-
-jaccard_per_donor <- lapply(donor_df$donor.ID, get_donor_jaccard , cells_in_clones_tcr_manual)
-jaccard_per_donor_all <- bind_rows(jaccard_per_donor)
-nrow(jaccard_per_donor_all) # 768
-
-### Convert into a wide matrix with one row per donor and columns by cluster comparison
-
-# name the cluster comparisons, # remove rows where Cluster 1 == cluster2
-jaccard_per_donor_all_wide <- jaccard_per_donor_all %>% 
-  filter(Cluster1 !=Cluster2) %>%
-  mutate(comparison = paste(Cluster1, Cluster2, sep = "-")) %>%
-  # remove NA rows
-  filter(!is.na(Jaccard))
-nrow(jaccard_per_donor_all_wide) # 624
-
-# make jaccard numeric
-jaccard_per_donor_all_wide$Jaccard <- as.numeric(jaccard_per_donor_all_wide$Jaccard)
-
-# convert to wide
-jaccard_per_donor_all_wide <- jaccard_per_donor_all_wide %>% select(-Cluster1, -Cluster2) %>%
-  pivot_wider(names_from = comparison, values_from = Jaccard ) %>% 
-  column_to_rownames(.,var = "Donor.ID")
-
-jaccard_per_donor_all_wide[is.na(jaccard_per_donor_all_wide)] <- 0
-class(jaccard_per_donor_all_wide)
-
-### Create clone sharing heatmap plot using Complex Heatmap 
-
-# make into matrix 
-jaccard_per_donor_all_wide_mat <- as.matrix(t(jaccard_per_donor_all_wide))
-
-# annotate by response
-cells_in_clones_tcr_manual %>% distinct(Response, Donor.ID )
-
-# put in same order as the input matrix
-ha <- columnAnnotation(Response = c("R","R","NR","NR","R","NR","NR","R","NR","R","R","NR"),
-                       col = list(Response = c("R" = "red","NR" = "blue")))
-
-
-# Plot heatmap, where 1 = perfect match 
-pdf(file = "./FIGURES/jaccard_per_donor_all_wide_mat.pdf",height = 10, width = 10)
-ComplexHeatmap::Heatmap(jaccard_per_donor_all_wide_mat, top_annotation = ha)
-dev.off()
-
-## Split to view specific comparisons - only plot when cluster 1 = 4 and is shared with 5,6,7,8
-
-# name the cluster comparisons, # remove rows where Cluster 1 == cluster2, and leep only where cluster 1 = 4
-jaccard_per_donor_all_wide_4 <- jaccard_per_donor_all %>% 
-  filter(Cluster1 !=Cluster2) %>%
-  filter(Cluster1 == "cluster4" & Cluster2 %in% c("cluster5","cluster6","cluster7","cluster8")) %>%
-  mutate(comparison = paste(Cluster1, Cluster2, sep = "-")) %>%
-  # remove NA rows
-  filter(!is.na(Jaccard))
-nrow(jaccard_per_donor_all_wide_4) # 48
-
-# make jaccard numeric
-jaccard_per_donor_all_wide_4$Jaccard <- as.numeric(jaccard_per_donor_all_wide_4$Jaccard)
-
-# convert to wide
-jaccard_per_donor_all_wide_4 <- jaccard_per_donor_all_wide_4 %>% select(-Cluster1, -Cluster2) %>%
-  pivot_wider(names_from = comparison, values_from = Jaccard ) %>% 
-  column_to_rownames(.,var = "Donor.ID")
-
-jaccard_per_donor_all_wide_4[is.na(jaccard_per_donor_all_wide_4)] <- 0
-class(jaccard_per_donor_all_wide_4)
-
-### Create clone sharing heatmap plot using Complex Heatmap 
-
-# make into matrix 
-jaccard_per_donor_all_wide_4_mat <- as.matrix(t(jaccard_per_donor_all_wide_4))
-
-# annotate by response
-# put in same order as the input matrix
-ha <- columnAnnotation(Response = c("R","R","NR","NR","R","NR","NR","R","NR","R","R","NR"),
-                       col = list(Response = c("R" = "red","NR" = "blue")))
-
-# Plot heatmap, where 1 = perfect match 
-pdf(file = "./FIGURES/jaccard_per_donor_all_wide_mat_cluster4.pdf",height = 5, width = 7)
-ComplexHeatmap::Heatmap(jaccard_per_donor_all_wide_4_mat, top_annotation = ha)
-dev.off()
-
-#### Statistics on chain and clonotype sharing by donor ####
-
-cells_in_clones_tcr_manual # remember, this data has been subset for cells that are expanded based on alpha chain sharing
-
-# get counts of how many cells have that alpha chain per cluster per donor
-cells_with_alpha_per_cluster <- cells_in_clones_tcr_manual  %>% group_by(Donor.ID, Cluster.Name, tcr_id_TRA) %>% 
-  summarize(cells_with_alpha_per_cluster = n()) 
-
-# find which alphas are in more than one cluster
-shared_alphas <- cells_with_alpha_per_cluster %>% group_by(tcr_id_TRA, Donor.ID) %>% dplyr::count() %>% filter(n >1) 
-
-# find number of cells in each cluster with this shared alpha
-cells_with_shared_alpha <- cells_with_alpha_per_cluster %>% filter(tcr_id_TRA %in% shared_alphas$tcr_id_TRA)
-
-## What fraction of the expanded, shared-between-cluster cells in that cluster per donor is represented by each shared alpha?
-# Count the number of cells in an expanded, shared between cluster per donor, response, and cluster (since each cell is a row in the metadata)
-cells_in_clones_tcr_manual_shared <- cells_in_clones_tcr_manual %>% filter(tcr_id_TRA %in% shared_alphas$tcr_id_TRA) %>%
-  group_by(Donor.ID, Response, Cluster.Name) %>% summarize(cells_per_person_per_cluster = n()) 
-
-# divide the number of cells per alpha chain by the number of total cells for that person in the given cluster
-cells_with_shared_alpha <- left_join(cells_with_shared_alpha, cells_in_clones_tcr_manual_shared, by = c("Donor.ID","Cluster.Name")) %>% 
-  mutate(fraction_shared_alpha = cells_with_alpha_per_cluster/cells_per_person_per_cluster)
-
-## Repeat for clonotype id definition
-
-# use df that has been filtered for expanded clonotypes
-cells_in_clones_tcr_manual_clonotype
-
-# get counts of how many cells have that clonotype_id per cluster per donor
-cells_with_clonotype_id_per_cluster <-  cells_in_clones_tcr_manual_clonotype %>% group_by(Donor.ID, Cluster.Name, clonotype_id) %>% 
-  summarize(cells_with_clonotype_per_cluster = n()) 
-
-# find which clonotypes are in more than one cluster, by Donor
-shared_clonotype_id <- cells_with_clonotype_id_per_cluster %>% group_by(clonotype_id,Donor.ID) %>% dplyr::count() %>% filter(n >1) 
-
-# find number of cells in each cluster and donor with this shared clonotype id
-cells_with_shared_clonotype_id <- cells_with_clonotype_id_per_cluster %>% filter(clonotype_id %in% shared_clonotype_id$clonotype_id)
-
-## What fraction of the total expanded cells in that cluster per donor is represented by each shared clonotype?
-# Count the number of cells in an expanded clone per donor, response, and cluster (since each cell is a row in the metadata)
-cells_in_clones_tcr_manual_shared <-  cells_in_clones_tcr_manual_clonotype %>% filter(clonotype_id %in% shared_clonotype_id$clonotype_id) %>%
-  group_by(Donor.ID, Response, Cluster.Name) %>% summarize(cells_per_person_per_cluster = n()) 
-
-# divide the number of cells per clonotype by the number of total cells for that person in the given cluster
-cells_with_shared_clonotype_id  <- left_join(cells_with_shared_clonotype_id, cells_in_clones_tcr_manual_shared, by = c("Donor.ID","Cluster.Name")) %>% 
-  mutate(fraction_shared_clonotype = cells_with_clonotype_per_cluster/cells_per_person_per_cluster)
-
-### Plot the fraction of sharing and counts of sharing by each shared alpha in each cluster
-fraction_alpha_sharing_plot <- ggplot(cells_with_shared_alpha, aes(x = Donor.ID, y = fraction_shared_alpha, fill = tcr_id_TRA)) + geom_col() + 
-  facet_grid(Response~Cluster.Name) + theme(legend.position = "none") + 
-  theme(axis.text.x = element_text(angle = 90, hjust =1, size = 12)) + 
-  labs(x = "Fraction of Cells with Shared Alpha", y = "Donor")
-ggsave(fraction_alpha_sharing_plot, file = "./FIGURES/fraction_alpha_sharing_plot.pdf", device = "pdf", width = 15, height = 5 )
-
-count_alpha_sharing_plot <-ggplot(cells_with_shared_alpha, aes(x = Donor.ID, y = cells_with_alpha_per_cluster, fill = tcr_id_TRA)) + geom_col() + 
-  facet_grid(Response~Cluster.Name) + theme(legend.position = "none") + 
-  theme(axis.text.x = element_text(angle = 90, hjust =1, size = 12)) +
-  labs(x = "Number of Cells with Shared Alpha", y = "Donor")
-
-ggsave(count_alpha_sharing_plot, file = "./FIGURES/count_alpha_sharing_plot.pdf", device = "pdf", width = 10, height = 8)
-
-## Plot the fraction of sharing and counts of sharing by each shared clonotype in each cluster
-ggplot(cells_with_shared_clonotype_id , aes(x = Donor.ID, y = fraction_shared_clonotype, fill = clonotype_id)) + geom_col() + 
-  facet_grid(Response~Cluster.Name) + theme(legend.position = "none") + 
-  theme(axis.text.x = element_text(angle = 90, hjust =1, size = 12)) +
-  labs(x = "Fraction of Cells with Shared Clonotype", y = "Donor")
-
-ggplot(cells_with_shared_clonotype_id, aes(x = Donor.ID, y = cells_with_clonotype_per_cluster, fill = clonotype_id)) + geom_col() + 
-  facet_grid(Response~Cluster.Name) + theme(legend.position = "none") + 
-  theme(axis.text.x = element_text(angle = 90, hjust =1, size = 12)) + 
-  labs(x = "Number of Cells with Shared Clonotype", y = "Donor")
-
-## How many clonotypes or alpha chains are shared between donors within clusters all together
-# shared alpha
-TRA_donor_occurence <- cells_with_shared_alpha %>% distinct(Cluster.Name, Donor.ID, tcr_id_TRA) %>% group_by(Cluster.Name, tcr_id_TRA) %>% 
-  summarize(donors_sharing_TRA = n ()) %>% dplyr::count(donors_sharing_TRA) 
-TRA_donor_occurence$donors_sharing_TRA <- factor(TRA_donor_occurence$donors_sharing_TRA, levels = c("1","2", "3"))
-
-TRA_donor_occurence_plot <- ggplot(TRA_donor_occurence, aes(x = donors_sharing_TRA, y = n)) + geom_col() + facet_grid(.~Cluster.Name) + 
-  labs(x = "Number of Donors Sharing Alpha Chain", y = "Number of Shared Unique Alpha Chains")
-
-ggsave(TRA_donor_occurence_plot, file = "./FIGURES/TRA_donor_occurence_plot.pdf", device = "pdf", width = 8, height = 5) 
-
-# shared clonotype
-clonotype_donor_occurence <- cells_with_shared_clonotype_id %>% distinct(Cluster.Name, Donor.ID, clonotype_id) %>% group_by(Cluster.Name, clonotype_id) %>% 
-  summarize(donors_sharing_clonotype = n ()) %>% dplyr::count(donors_sharing_clonotype) 
-clonotype_donor_occurence$donors_sharing_clonotype <- factor(clonotype_donor_occurence$donors_sharing_clonotype, levels = c("1"))
-
-ggplot(clonotype_donor_occurence, aes(x = donors_sharing_clonotype, y = n)) + geom_col() + facet_grid(.~Cluster.Name) + 
-  labs(x = "Number of Donors Sharing Clonotype", y = "Number of Shared Clonotypes")
-
-### What fraction does shared cells from one donor make up all the TCR sharing in a given cluster?
-# divide the total shared cells in that cluster for each donor by the total number of shared cells in that cluster 
-
-# get total cells per person per cluster
-proportion_cells_per_person <- cells_with_shared_alpha %>% distinct(Donor.ID, Cluster.Name, cells_per_person_per_cluster) %>%
-  # get total cells per cluster  
-  group_by(Cluster.Name) %>%
-  mutate(total_per_cluster = sum(cells_per_person_per_cluster)) %>%
-  # what fraction does cells from each person make up all shared cells in cluster
-  group_by(Cluster.Name, Donor.ID) %>%
-  summarize(fraction_donor_in_cluster = cells_per_person_per_cluster/total_per_cluster)
-
-ggplot(proportion_cells_per_person, aes(x = Cluster.Name, y = fraction_donor_in_cluster, fill = Donor.ID)) + geom_col() + 
-  theme(axis.text.x = element_text(angle = 90, hjust =1, size = 12)) +
-  labs(x = "Cluster",y = "Fraction of Cells per Donor")
-
-## How about if you split it out by Response?
-# get total cells per person per cluster by response
-proportion_cells_per_person_response <- cells_with_shared_alpha %>% distinct(Donor.ID, Cluster.Name, cells_per_person_per_cluster, Response) %>%
-  # get total cells per cluster  by response
-  group_by(Cluster.Name, Response) %>%
-  mutate(total_per_cluster = sum(cells_per_person_per_cluster)) %>%
-  # what fraction does cells from each person make up all shared cells in cluster by response
-  group_by(Cluster.Name, Donor.ID, Response) %>%
-  summarize(fraction_donor_in_cluster = cells_per_person_per_cluster/total_per_cluster)
-
-proportion_cells_per_person_response_plot <- ggplot(proportion_cells_per_person_response, aes(x = Cluster.Name, y = fraction_donor_in_cluster, fill = Donor.ID)) + geom_col() +
-  facet_grid(.~Response) +
-  theme(axis.text.x = element_text(angle = 90, hjust =1, size = 12)) +
-  labs(x = "Cluster",y = "Fraction of Cells per Donor")
-
-ggsave(proportion_cells_per_person_response_plot, file ="./FIGURES/proportion_cells_per_person_response_plot.pdf", device = "pdf",
-       width = 10, height = 5)
-
-# What patients are in cluster 7 for responders
-proportion_cells_per_person_response %>% filter(Cluster.Name == 7 & Response == "R") %>% select(Donor.ID)
-#   Cluster.Name Donor.ID
-#       <chr>   
-#         10213   
-#         10256   
-#         10295   
-#         10396   
-#         10458 
-
-#### Analyze TCR sharing between cluster 4 and 7 ####
-
-## Examine first by alpha chain sharing 
-
-cells_in_clones_tcr_manual # remember, this data has been subset for cells that are expanded based on alpha chain sharing
-
-# get counts of how many cells have that alpha chain per cluster per donor
-cells_with_alpha_per_cluster_response <- cells_in_clones_tcr_manual  %>% group_by(Donor.ID, Cluster.Name, tcr_id_TRA, Response) %>% 
-  summarize(cells_with_alpha_per_cluster = n()) 
-
-cells_with_alpha_per_cluster_4 <- cells_with_alpha_per_cluster_response %>% filter(Cluster.Name == 4)
-cells_with_alpha_per_cluster_7 <- cells_with_alpha_per_cluster_response %>% filter(Cluster.Name == 7)
-
-# Find shared alpha between these two clusters specifically
-cells_with_alpha_per_cluster_4_7 <- left_join(cells_with_alpha_per_cluster_4,cells_with_alpha_per_cluster_7, by = c("tcr_id_TRA", "Donor.ID", "Response" ))
-cells_with_alpha_per_cluster_4_7_shared <- cells_with_alpha_per_cluster_4_7 %>% filter(!is.na(Cluster.Name.y))
-
-## yes 10458 R and 10748 NR
-# plot the number of cells per clonotype and per donor
-
-cells_with_alpha_per_cluster_4_7_shared_total_plot <- ggplot(cells_with_alpha_per_cluster_4_7_shared, aes(x = Donor.ID, y =cells_with_alpha_per_cluster.y, fill = tcr_id_TRA )) + 
-  geom_col() +
-  facet_grid(.~Response) + 
-  theme(legend.position = "none") + 
-  theme(axis.text.x = element_text( angle = 90, hjust = 1), text = element_text(size = 12)) + 
-  labs(x = "Cells in Cluster 7 Sharing Alpha with Cluster 4", y = "Donor")
-
-ggsave(cells_with_alpha_per_cluster_4_7_shared_total_plot, file = "./FIGURES/cells_with_alpha_per_cluster_4_7_shared_total_plot.pdf", device = "pdf",
-       height = 5, width = 7)
-
-## Repeat by clonotype
-cells_in_clones_tcr_manual_clonotype
-
-# get counts of how many cells have that clonotype per cluster per donor
-cells_with_clonotype_per_cluster_response <- cells_in_clones_tcr_manual_clonotype %>% group_by(Donor.ID, Cluster.Name, clonotype_id, Response) %>% 
-  summarize(cells_with_clonotype_per_cluster = n()) 
-
-cells_with_clonotype_per_cluster_response_4 <- cells_with_clonotype_per_cluster_response  %>% filter(Cluster.Name == 4)
-cells_with_clonotype_per_cluster_response_7 <- cells_with_clonotype_per_cluster_response  %>% filter(Cluster.Name == 7)
-
-# Find shared clonotype between these two clusters specifically
-cells_with_clonotype_per_cluster_response_4_7 <- left_join(cells_with_clonotype_per_cluster_response_4,cells_with_clonotype_per_cluster_response_7, by = c("clonotype_id", "Donor.ID", "Response" ))
-cells_with_clonotype_per_cluster_response_4_7_shared <- cells_with_clonotype_per_cluster_response_4_7 %>% filter(!is.na(Cluster.Name.y))
-
-## yes 10458 R and 10748 NR
-# plot the number of cells per clonotype and per donor
-
-cells_with_clonotype_per_cluster_response_4_7_shared_plot <- ggplot(cells_with_clonotype_per_cluster_response_4_7_shared, aes(x = Donor.ID, y =cells_with_clonotype_per_cluster.y, fill = clonotype_id )) + 
-  geom_col() +
-  facet_grid(.~Response) + 
-  theme(legend.position = "none") + 
-  theme(axis.text.x = element_text( angle = 90, hjust = 1), text = element_text(size = 12)) + 
-  labs(x = "Cells in Cluster 7 Sharing Clonotype with Cluster 4", y = "Donor")
-
-ggsave(cells_with_clonotype_per_cluster_response_4_7_shared_plot, file = "./FIGURES/cells_with_clonotype_per_cluster_response_4_7_shared_plot.pdf", device = "pdf",
-       height = 5, width = 7)
-
-# Which clonotypes from 4 are most expanded in 7?
-cells_with_clonotype_per_cluster_response_4_7_shared %>% arrange(desc(cells_with_clonotype_per_cluster.y)) %>% head()
-# Donor.ID Cluster.Name.x clonotype_id              Response cells_with_clonotype_per_cluster.x Cluster.Name.y cells_with_clonotype_per_cluster.y
-#<chr>    <fct>          <chr>                     <chr>                                 <int> <fct>                                       <int>
-#  1 10458    4              VJcdr3nt_10:VJcdr3nt_3    R                                         2 7                                              49
-#2 10748    4              VJcdr3nt_8:VJcdr3nt_1     NR                                        3 7                                              22
-
-## Find the cdr3_nt sequences for these
-cells_in_clones_tcr_manual%>% filter(clonotype_id == "VJcdr3nt_10:VJcdr3nt_3") %>% distinct(cdr3_nt_TRA, cdr3_nt_TRB) 
-#cdr3_nt_TRA                             cdr3_nt_TRB
-#AAACCTGAGAGTACCG-8 TGCATCCTTCCCCTTGCTGGTGGTACTAGCTATGGAAAGCTGACATTT TGTGCCAGCAGCTTAGGACAGGCCTACGAGCAGTACTTC
-
-cells_in_clones_tcr_manual %>% filter(clonotype_id == "VJcdr3nt_8:VJcdr3nt_1") %>% distinct(cdr3_nt_TRA, cdr3_nt_TRB) 
-#cdr3_nt_TRA                                   cdr3_nt_TRB
-#AAACCTGTCGTGGACC-12 TGTGCAATGAGCGCGGGAGCTGCAGGCAACAAGCTAACTTTT TGCAGTGCCCGCCGGGACAGGGGTGAGGTTTATGGCTACACCTTC
-
-## No hits for any of these in the VDJDB database, need to get the amino acid sequence from the original table!
-# VJcdr3nt_10:VJcdr3nt_3 TRA first
-all_libs_tcrs %>% filter(cdr3_nt == "TGCATCCTTCCCCTTGCTGGTGGTACTAGCTATGGAAAGCTGACATTT") %>% distinct(cdr3, v_gene, j_gene)
-# v_gene j_gene             cdr3
-# 1 TRAV26-2 TRAJ52 CILPLAGGTSYGKLTF
-
-# VJcdr3nt_8:VJcdr3nt_1 TRA first
-all_libs_tcrs %>% filter(cdr3_nt == "TGTGCAATGAGCGCGGGAGCTGCAGGCAACAAGCTAACTTTT") %>% distinct(cdr3, v_gene, j_gene)
-#v_gene j_gene           cdr3
-#1 TRAV12-3 TRAJ17 CAMSAGAAGNKLTF # no results found for Alpha
-all_libs_tcrs %>% filter(cdr3_nt == "TGCAGTGCCCGCCGGGACAGGGGTGAGGTTTATGGCTACACCTTC") %>% distinct(cdr3, v_gene, j_gene)
-# v_gene  j_gene            cdr3
-# 1 TRBV20-1 TRBJ1-2 CSARRDRGEVYGYTF
-
-
-#### Create airline plot using manual TCR clonotype defined by alpha chain sharing  ####
+#### FIGURE 5C,FIGURE 5F, FIGURE S12B: Create airline plot using manual TCR clonotype defined by alpha chain sharing  ####
 load("./EW_T1DAL_Results/cds_all_tcr_manual.Rdata")
 
 # Use the UMAP coldata where the TCR information has been joined
@@ -1509,31 +966,7 @@ for (clone_id.tmp_manual in na.omit(unique(data.tmp_manual$clone_id_tcr_graph_cl
 # set clor pallette
 pal.cluster_renumbered = toupper(c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffed6f','#b15928', "gray","black","blue","red")) 
 
-# make airline plot of the full TCR sharing
-full_TCR_airline_plot_manual <- plot_cells(
-  cds_all_tcr_manual,
-  color_cells_by = "Cluster.Name", cell_size=1, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual,
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.07,
-    alpha=0.5) +
-  theme(text = element_text(size = 16))
-
-ggsave(full_TCR_airline_plot_manual, file = "./FIGURES/full_TCR_airline_plot_manual_ALPHA.pdf", device = "pdf",height = 10, width = 10)
-
-# plot with trajectory - done here to keep colors the same
-full_TCR_airline_plot_manual_trajectory <- plot_cells(
-  cds_all_tcr_manual,
-  color_cells_by = "Cluster.Name", cell_size=1, show_trajectory_graph = TRUE,
-  group_label_size=) +
-  scale_color_manual(values=pal.cluster_renumbered) 
-
-ggsave(full_TCR_airline_plot_manual_trajectory, file = "./FIGURES/full_TCR_airline_plot_manual_trajectory.pdf", height = 8, width = 8)
-
-# remove cluster 9  from figure
+## FIGURE 5C make airline plot of the full TCR sharing cluster 9 removed
 full_TCR_airline_plot_manual_no_9 <- plot_cells(
   cds_all_tcr_manual[,colnames(cds_all_tcr_manual) %in% row.names(colData(cds_all_tcr_manual) %>% as.data.frame() %>% filter(Cluster.Name != 9))],
   color_cells_by = "Cluster.Name", cell_size=1, show_trajectory_graph = FALSE,
@@ -1546,57 +979,10 @@ full_TCR_airline_plot_manual_no_9 <- plot_cells(
     alpha=0.5) +
   theme(text = element_text(size = 24))
 
+## plot Figure 5C
 ggsave(full_TCR_airline_plot_manual_no_9, file = "./FIGURES/full_TCR_airline_plot_manual_ALPHA_no_9.pdf", device = "pdf",height = 8, width = 8)
 
-
-## Plot only 2 clusters' curves at a time 
-
-# Plot connections between 4 and 7
-subset_clusts_curves = c(4,7)
-cluster_4_7_TCR_manual <- plot_cells(
-  cds_all_tcr_manual,
-  color_cells_by = "Cluster.Name", cell_size=1, alpha=0.8, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  # scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.2,
-    alpha=0.1)
-
-ggsave(cluster_4_7_TCR_manual, file = "./FIGURES/cluster_4_7_TCR_manual_ALPHA.tiff", device = "tiff",height = 10, width = 10)
-
-# Plot connections between 4,5,6, 8
-subset_clusts_curves = c(4,5,6,8)
-cluster_4_5_6_8_TCR_manual <- plot_cells(
-  cds_all_tcr_manual,
-  color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  # scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.2,
-    alpha=0.1)
-
-ggsave(cluster_4_5_6_8_TCR_manual, file = "./FIGURES/cluster_4_5_6_8_TCR_manual_alpha.tiff", device = "tiff",height = 10, width = 10)
-
-# Plot connections between 4,5,6,7,8
-subset_clusts_curves = c(4,5,6,7,8)
-cluster_4_5_6_7_8_TCR_manual <- plot_cells(
-  cds_all_tcr_manual[,colnames(cds_all_tcr_manual) %in% row.names(colData(cds_all_tcr_manual) %>% as.data.frame() %>% filter(Cluster.Name != 9))],
-  color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.2,
-    alpha=0.1)
-
-ggsave(cluster_4_5_6_7_8_TCR_manual , file = "./FIGURES/cluster_4_5_6_7_8_TCR_manual_alpha.tiff", device = "tiff",height = 10, width = 10)
-
-# plot individually
+## FIGURE S12B: plot connections to each cluster individually
 subset_clusts_curves = c(4,5)
 cluster_4_5_TCR_manual <- plot_cells(
   cds_all_tcr_manual[,colnames(cds_all_tcr_manual) %in% row.names(colData(cds_all_tcr_manual) %>% as.data.frame() %>% filter(Cluster.Name != 9))],
@@ -1650,9 +1036,12 @@ cluster_4_8_TCR_manual <- plot_cells(
   labs(title = "Precursor 4-8 Sharing")
 
 precursor_clusters <- egg::ggarrange(cluster_4_5_TCR_manual, cluster_4_6_TCR_manual,cluster_4_7_TCR_manual,cluster_4_8_TCR_manual)
+
+# FIGURE S12B
 ggsave(precursor_clusters , file = "./FIGURES/precursor_clusters_all.tiff", device = "tiff",height = 10, width = 10)
 
-## Plot all connections that start or end in 4 or one Ex cluster
+
+### FIGURE 5F: Plot all connections that start or end in 4 or one Ex cluster
 
 cluster_4_to_Tex_TCR_manual <- plot_cells(
   cds_all_tcr_manual[,colnames(cds_all_tcr_manual) %in% row.names(colData(cds_all_tcr_manual) %>% as.data.frame() %>% filter(Cluster.Name != 9))],
@@ -1718,533 +1107,7 @@ cds_all_tcr_manual_R <- cds_all_tcr_manual[,colnames(cds_all_tcr_manual) %in% ro
 cds_all_tcr_manual_NR <- cds_all_tcr_manual[,colnames(cds_all_tcr_manual) %in% row.names(colData(cds_all_tcr_manual) %>% as.data.frame() %>% filter(Response=="NR"))]
 save(cds_all_tcr_manual_R, cds_all_tcr_manual_NR, file = "./EW_T1DAL_Results/cds_all_tcr_manual_R_NR.Rdata")
 
-# make a copy of the annotation plus UMAP coordinates, for easier manipulation
-data.tmp_manual_R <-
-  as.data.frame(colData(cds_all_tcr_manual_R)) %>%
-  # Combine the colData with the reduced dimension representation coordinated for these clones
-  cbind(
-    as.data.frame(reducedDims(cds_all_tcr_manual_R)$UMAP) %>%
-      magrittr::set_colnames(c("V1", "V2"))) %>% 
-  dplyr::rename("clone_id_tcr_graph_clonal_expansion" = "tcr_id_TRA")
 
-data.tmp_manual_NR <-
-  as.data.frame(colData(cds_all_tcr_manual_NR)) %>%
-  # Combine the colData with the reduced dimension representation coordinated for these clones
-  cbind(
-    as.data.frame(reducedDims(cds_all_tcr_manual_NR)$UMAP) %>%
-      magrittr::set_colnames(c("V1", "V2"))) %>% 
-  dplyr::rename("clone_id_tcr_graph_clonal_expansion" = "tcr_id_TRA")
-
-
-# create data frame to store links
-curves.tmp_manual_R <-
-  data.frame(
-    clone_id_tcr_graph_clonal_expansion = character(),
-    x = numeric(),
-    y = numeric(),
-    xend = numeric(),
-    yend = numeric())
-
-curves.tmp_manual_NR <-
-  data.frame(
-    clone_id_tcr_graph_clonal_expansion = character(),
-    x = numeric(),
-    y = numeric(),
-    xend = numeric(),
-    yend = numeric())
-
-# loop over each clone, and extract UMAP coordinates for cells from the same clone
-for (clone_id.tmp_manual_R in na.omit(unique(data.tmp_manual_R$clone_id_tcr_graph_clonal_expansion))) {
-  clone_id_curves.tmp_manual_R <- curves.tmp_manual_R[0,]
-  data_for_curves.tmp_manual_R <-
-    data.tmp_manual_R %>%
-    dplyr::filter(clone_id_tcr_graph_clonal_expansion %in% clone_id.tmp_manual_R)
-  if (nrow(data_for_curves.tmp_manual_R) > 1) {
-    for (i in 1:(nrow(data_for_curves.tmp_manual_R)-1)) {
-      for (j in (i+1):nrow(data_for_curves.tmp_manual_R)) {
-        clone_id_curves.tmp_manual_R <-
-          rbind(
-            clone_id_curves.tmp_manual_R,
-            list(
-              clone_id_tcr_graph_clonal_expansion =
-                data_for_curves.tmp_manual_R$clone_id_tcr_graph_clonal_expansion[i],
-              x = data_for_curves.tmp_manual_R$V1[i],
-              y = data_for_curves.tmp_manual_R$V2[i],
-              cluster1 = data_for_curves.tmp_manual_R$Cluster.Name[i],
-              xend = data_for_curves.tmp_manual_R$V1[j],
-              yend = data_for_curves.tmp_manual_R$V2[j],
-              cluster2 = data_for_curves.tmp_manual_R$Cluster.Name[j]))
-      }
-    }
-  }
-  curves.tmp_manual_R <-
-    rbind(curves.tmp_manual_R, clone_id_curves.tmp_manual_R)
-}
-
-# repeat for NR
-for (clone_id.tmp_manual_NR in na.omit(unique(data.tmp_manual_NR$clone_id_tcr_graph_clonal_expansion))) {
-  clone_id_curves.tmp_manual_NR <- curves.tmp_manual_NR[0,]
-  data_for_curves.tmp_manual_NR <-
-    data.tmp_manual_NR %>%
-    dplyr::filter(clone_id_tcr_graph_clonal_expansion %in% clone_id.tmp_manual_NR)
-  if (nrow(data_for_curves.tmp_manual_NR) > 1) {
-    for (i in 1:(nrow(data_for_curves.tmp_manual_NR)-1)) {
-      for (j in (i+1):nrow(data_for_curves.tmp_manual_NR)) {
-        clone_id_curves.tmp_manual_NR <-
-          rbind(
-            clone_id_curves.tmp_manual_NR,
-            list(
-              clone_id_tcr_graph_clonal_expansion =
-                data_for_curves.tmp_manual_NR$clone_id_tcr_graph_clonal_expansion[i],
-              x = data_for_curves.tmp_manual_NR$V1[i],
-              y = data_for_curves.tmp_manual_NR$V2[i],
-              cluster1 = data_for_curves.tmp_manual_NR$Cluster.Name[i],
-              xend = data_for_curves.tmp_manual_NR$V1[j],
-              yend = data_for_curves.tmp_manual_NR$V2[j],
-              cluster2 = data_for_curves.tmp_manual_NR$Cluster.Name[j]))
-      }
-    }
-  }
-  curves.tmp_manual_NR <-
-    rbind(curves.tmp_manual_NR, clone_id_curves.tmp_manual_NR)
-}
-
-# set clor pallette
-pal.cluster_renumbered = toupper(c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffed6f','#b15928', "gray","black","blue","red")) 
-
-# make airline plots of the full TCR sharing
-full_TCR_airline_plot_manual_R <- plot_cells(
-  cds_all_tcr_manual_R,
-  color_cells_by = "Cluster.Name", cell_size=1, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual_R,
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.07,
-    alpha=0.5) 
-
-ggsave(full_TCR_airline_plot_manual_R, file = "./FIGURES/full_TCR_airline_plot_manual_R_alpha.pdf", device = "pdf",height = 10, width = 10)
-
-full_TCR_airline_plot_manual_NR <- plot_cells(
-  cds_all_tcr_manual_NR,
-  color_cells_by = "Cluster.Name", cell_size=1, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual_NR,
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.07,
-    alpha=0.5) 
-
-ggsave(full_TCR_airline_plot_manual_NR, file = "./FIGURES/full_TCR_airline_plot_manual_NR_alpha.pdf", device = "pdf",height = 10, width = 10)
-
-## Plot only 2 clusters' curves at a time 
-
-# Plot connections between 4 and 7 for R and NR
-subset_clusts_curves = c(4,7)
-cluster_4_7_TCR_manual_R <- plot_cells(
-  cds_all_tcr_manual_R,
-  color_cells_by = "Cluster.Name", cell_size=1, alpha=0.8, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  # scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual_R %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.3,
-    alpha=0.1)
-
-ggsave(cluster_4_7_TCR_manual_R, file = "./FIGURES/cluster_4_7_TCR_manual_R_alpha.tiff", device = "tiff",height = 10, width = 10)
-
-cluster_4_7_TCR_manual_NR <- plot_cells(
-  cds_all_tcr_manual_NR,
-  color_cells_by = "Cluster.Name", cell_size=1, alpha=0.8, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  # scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual_NR %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.3,
-    alpha=0.1)
-
-ggsave(cluster_4_7_TCR_manual_NR, file = "./FIGURES/cluster_4_7_TCR_manual_NR_alpha.tiff", device = "tiff",height = 10, width = 10)
-
-# Plot connections between 4,5,6, 8
-subset_clusts_curves = c(4,5,6,8)
-cluster_4_5_6_8_TCR_manual_R <- plot_cells(
-  cds_all_tcr_manual_R,
-  color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  # scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual_R %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.3,
-    alpha=0.1)
-
-ggsave(cluster_4_5_6_8_TCR_manual_R, file = "./FIGURES/cluster_4_5_6_8_TCR_manual_R_alpha.tiff", device = "tiff",height = 10, width = 10)
-
-subset_clusts_curves = c(4,5,6,8)
-cluster_4_5_6_8_TCR_manual_NR <- plot_cells(
-  cds_all_tcr_manual_NR,
-  color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  # scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual_NR %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.3,
-    alpha=0.1)
-
-ggsave(cluster_4_5_6_8_TCR_manual_NR, file = "./FIGURES/cluster_4_5_6_8_TCR_manual_NR_alpha.tiff", device = "tiff",height = 10, width = 10)
-
-## Plot connections between 4,5,6,7
-subset_clusts_curves = c(4,5,6,7)
-cluster_4_5_6_7_TCR_manual_R <- plot_cells(
-  cds_all_tcr_manual_R,
-  color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  # scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual_R %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.3,
-    alpha=0.1)
-
-ggsave(cluster_4_5_6_7_TCR_manual_R, file = "./FIGURES/cluster_4_5_6_7_TCR_manual_R_alpha.tiff", device = "tiff",height = 10, width = 10)
-
-subset_clusts_curves = c(4,5,6,7)
-cluster_4_5_6_7_TCR_manual_NR <- plot_cells(
-  cds_all_tcr_manual_NR,
-  color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  # scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual_NR %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.3,
-    alpha=0.1)
-
-ggsave(cluster_4_5_6_7_TCR_manual_NR, file = "./FIGURES/cluster_4_5_6_7_TCR_manual_NR_alpha.tiff", device = "tiff",height = 10, width = 10)
-
-## Plot connections between 5,6,7
-subset_clusts_curves = c(5,6,7)
-cluster_5_6_7_TCR_manual_R <- plot_cells(
-  cds_all_tcr_manual_R,
-  color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  # scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual_R %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.3,
-    alpha=0.1)
-
-ggsave(cluster_5_6_7_TCR_manual_R, file = "./FIGURES/cluster_5_6_7_TCR_manual_R_alpha.tiff", device = "tiff",height = 10, width = 10)
-
-subset_clusts_curves = c(5,6,7)
-cluster_5_6_7_TCR_manual_NR <- plot_cells(
-  cds_all_tcr_manual_NR,
-  color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  # scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual_NR %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.3,
-    alpha=0.1)
-
-ggsave(cluster_5_6_7_TCR_manual_NR, file = "./FIGURES/cluster_5_6_7_TCR_manual_NR_alpha.tiff", device = "tiff",height = 10, width = 10)
-
-#### Create airline plots for each donor ####
-
-donor_list_R <-unique(cells_in_clones_tcr_manual[cells_in_clones_tcr_manual$Response == "R",]$Donor.ID)
-
-## First use loop to output for all responders 
-
-for(donor in donor_list_R) {
-  
-  cds_all_tcr_manual_R_donor <- cds_all_tcr_manual[,colnames(cds_all_tcr_manual) %in% 
-                                                     row.names(colData(cds_all_tcr_manual) %>% as.data.frame() %>% 
-                                                                 filter(Response=="R" & Donor.ID == donor))]
-  
-  # make a copy of the annotation plus UMAP coordinates, for easier manipulation
-  data.tmp_manual_R_donor <-
-    as.data.frame(colData(cds_all_tcr_manual_R_donor)) %>%
-    # Combine the colData with the reduced dimension representation coordinated for these clones
-    cbind(
-      as.data.frame(reducedDims(cds_all_tcr_manual_R_donor)$UMAP) %>%
-        magrittr::set_colnames(c("V1", "V2"))) %>% 
-    dplyr::rename("clone_id_tcr_graph_clonal_expansion" = "tcr_id_TRA")
-  
-  # create data frame to store links
-  curves.tmp_manual_R_donor <-
-    data.frame(
-      clone_id_tcr_graph_clonal_expansion = character(),
-      x = numeric(),
-      y = numeric(),
-      xend = numeric(),
-      yend = numeric())
-  
-  # loop over each clone, and extract UMAP coordinates for cells from the same clone
-  for (clone_id.tmp_manual_R_donor in na.omit(unique(data.tmp_manual_R_donor$clone_id_tcr_graph_clonal_expansion))) {
-    clone_id_curves.tmp_manual_R_donor <- curves.tmp_manual_R_donor[0,]
-    data_for_curves.tmp_manual_R_donor <-
-      data.tmp_manual_R_donor %>%
-      dplyr::filter(clone_id_tcr_graph_clonal_expansion %in% clone_id.tmp_manual_R_donor)
-    if (nrow(data_for_curves.tmp_manual_R_donor) > 1) {
-      for (i in 1:(nrow(data_for_curves.tmp_manual_R_donor)-1)) {
-        for (j in (i+1):nrow(data_for_curves.tmp_manual_R_donor)) {
-          clone_id_curves.tmp_manual_R_donor <-
-            rbind(
-              clone_id_curves.tmp_manual_R_donor,
-              list(
-                clone_id_tcr_graph_clonal_expansion =
-                  data_for_curves.tmp_manual_R_donor$clone_id_tcr_graph_clonal_expansion[i],
-                x = data_for_curves.tmp_manual_R_donor$V1[i],
-                y = data_for_curves.tmp_manual_R_donor$V2[i],
-                cluster1 = data_for_curves.tmp_manual_R_donor$Cluster.Name[i],
-                xend = data_for_curves.tmp_manual_R_donor$V1[j],
-                yend = data_for_curves.tmp_manual_R_donor$V2[j],
-                cluster2 = data_for_curves.tmp_manual_R_donor$Cluster.Name[j]))
-        }
-      }
-    }
-    curves.tmp_manual_R_donor <-
-      rbind(curves.tmp_manual_R_donor, clone_id_curves.tmp_manual_R_donor)
-  }
-  
-  
-  # set clor pallette
-  pal.cluster_renumbered = toupper(c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffed6f','#b15928', "gray","black","blue","red")) 
-  
-  # make airline plots of the full TCR sharing
-  full_TCR_airline_plot_manual_R_donor <- plot_cells(
-    cds_all_tcr_manual_R_donor,
-    color_cells_by = "Cluster.Name", cell_size=1, show_trajectory_graph = FALSE,
-    group_label_size=8) +
-    scale_color_manual(values=pal.cluster_renumbered) +
-    geom_curve(
-      data = curves.tmp_manual_R_donor,
-      mapping = aes(x=x, y=y, xend=xend, yend=yend),
-      size = 0.3,
-      alpha=0.1) + 
-    ggtitle(paste0("TCR Sharing Between All Clusters in",  donor)) +
-    theme(text = element_text(size = 10))
-  
-  ### Plot only 2 clusters' curves at a time 
-  
-  # Plot connections between 4 and 7 for R and NR
-  subset_clusts_curves = c(4,7)
-  cluster_4_7_TCR_manual_R_donor <- plot_cells(
-    cds_all_tcr_manual_R_donor,
-    color_cells_by = "Cluster.Name", cell_size=1, alpha=0.8, show_trajectory_graph = FALSE,
-    group_label_size=8) +
-    # scale_color_manual(values=pal.cluster_renumbered) +
-    geom_curve(
-      data = curves.tmp_manual_R_donor %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-      mapping = aes(x=x, y=y, xend=xend, yend=yend),
-      size = 0.5,
-      alpha=0.1)+ 
-    ggtitle(paste0("TCR Sharing Between Cluster 4,7 in", donor)) +
-    theme(text = element_text(size = 10))
-  
-  ## Plot connections between 4,5,6, 8
-  #subset_clusts_curves = c(4,5,6,8)
-  #cluster_4_5_6_8_TCR_manual_R_donor <- plot_cells(
-  #  cds_all_tcr_manual_R_donor,
-  #  color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-  #  group_label_size=8) +
-  #  # scale_color_manual(values=pal.cluster_renumbered) +
-  #  geom_curve(
-  #    data = curves.tmp_manual_R_donor %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-  #    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-  #    size = 0.3,
-  #    alpha=0.1)+ 
-  #  ggtitle(paste0("TCR Sharing Between Cluster 4,5,6,8 in", donor))
-  #
-  ### Plot connections between 4,5,6,7
-  #subset_clusts_curves = c(4,5,6,7)
-  #cluster_4_5_6_7_TCR_manual_R_donor <- plot_cells(
-  #  cds_all_tcr_manual_R_donor,
-  #  color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-  #  group_label_size=8) +
-  #  # scale_color_manual(values=pal.cluster_renumbered) +
-  #  geom_curve(
-  #    data = curves.tmp_manual_R_donor %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-  #    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-  #    size = 0.3,
-  #    alpha=0.1)+ 
-  #  ggtitle(paste0("TCR Sharing Between Cluster 4,5,6,7 in", donor))
-  #
-  ### Plot connections between 5,6,7
-  subset_clusts_curves = c(5,6,7)
-  cluster_5_6_7_TCR_manual_R_donor <- plot_cells(
-    cds_all_tcr_manual_R_donor,
-    color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-    group_label_size=8) +
-    # scale_color_manual(values=pal.cluster_renumbered) +
-    geom_curve(
-      data = curves.tmp_manual_R_donor %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-      mapping = aes(x=x, y=y, xend=xend, yend=yend),
-      size = 0.3,
-      alpha=0.1)+ 
-    ggtitle(paste0("TCR Sharing Between Cluster 5,6,7 in", donor)) +
-    theme(text = element_text(size = 10))
-  
-  plots = list(full_TCR_airline_plot_manual_R_donor, cluster_4_7_TCR_manual_R_donor, cluster_5_6_7_TCR_manual_R_donor  )
-  #,, cluster_4_5_6_8_TCR_manual_R_donor,cluster_4_5_6_7_TCR_manual_R_donor,)
-  
-  library(gridExtra)
-  pdf(paste0("./FIGURES/",donor,"_responder_airline.pdf"), onefile = TRUE, width = 8, height = 15)
-  do.call("grid.arrange", plots)  
-  dev.off()
-  
-}
-
-### Repeat for NR donors
-
-donor_list_NR <-unique(cells_in_clones_tcr_manual[cells_in_clones_tcr_manual$Response == "NR",]$Donor.ID)
-
-for(donor in donor_list_NR) {
-  
-  cds_all_tcr_manual_NR_donor <- cds_all_tcr_manual[,colnames(cds_all_tcr_manual) %in% 
-                                                      row.names(colData(cds_all_tcr_manual) %>% as.data.frame() %>% 
-                                                                  filter(Response=="NR" & Donor.ID == donor))]
-  
-  # make a copy of the annotation plus UMAP coordinates, for easier manipulation
-  data.tmp_manual_NR_donor <-
-    as.data.frame(colData(cds_all_tcr_manual_NR_donor)) %>%
-    # Combine the colData with the reduced dimension representation coordinated for these clones
-    cbind(
-      as.data.frame(reducedDims(cds_all_tcr_manual_NR_donor)$UMAP) %>%
-        magrittr::set_colnames(c("V1", "V2"))) %>% 
-    dplyr::rename("clone_id_tcr_graph_clonal_expansion" = "tcr_id_TRA")
-  
-  # create data frame to store links
-  curves.tmp_manual_NR_donor <-
-    data.frame(
-      clone_id_tcr_graph_clonal_expansion = character(),
-      x = numeric(),
-      y = numeric(),
-      xend = numeric(),
-      yend = numeric())
-  
-  # loop over each clone, and extract UMAP coordinates for cells from the same clone
-  for (clone_id.tmp_manual_NR_donor in na.omit(unique(data.tmp_manual_NR_donor$clone_id_tcr_graph_clonal_expansion))) {
-    clone_id_curves.tmp_manual_NR_donor <- curves.tmp_manual_NR_donor[0,]
-    data_for_curves.tmp_manual_NR_donor <-
-      data.tmp_manual_NR_donor %>%
-      dplyr::filter(clone_id_tcr_graph_clonal_expansion %in% clone_id.tmp_manual_NR_donor)
-    if (nrow(data_for_curves.tmp_manual_NR_donor) > 1) {
-      for (i in 1:(nrow(data_for_curves.tmp_manual_NR_donor)-1)) {
-        for (j in (i+1):nrow(data_for_curves.tmp_manual_NR_donor)) {
-          clone_id_curves.tmp_manual_NR_donor <-
-            rbind(
-              clone_id_curves.tmp_manual_NR_donor,
-              list(
-                clone_id_tcr_graph_clonal_expansion =
-                  data_for_curves.tmp_manual_NR_donor$clone_id_tcr_graph_clonal_expansion[i],
-                x = data_for_curves.tmp_manual_NR_donor$V1[i],
-                y = data_for_curves.tmp_manual_NR_donor$V2[i],
-                cluster1 = data_for_curves.tmp_manual_NR_donor$Cluster.Name[i],
-                xend = data_for_curves.tmp_manual_NR_donor$V1[j],
-                yend = data_for_curves.tmp_manual_NR_donor$V2[j],
-                cluster2 = data_for_curves.tmp_manual_NR_donor$Cluster.Name[j]))
-        }
-      }
-    }
-    curves.tmp_manual_NR_donor <-
-      rbind(curves.tmp_manual_NR_donor, clone_id_curves.tmp_manual_NR_donor)
-  }
-  
-  
-  # set clor pallette
-  pal.cluster_renumbered = toupper(c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffed6f','#b15928', "gray","black","blue","red")) 
-  
-  # make airline plots of the full TCR sharing
-  full_TCR_airline_plot_manual_NR_donor <- plot_cells(
-    cds_all_tcr_manual_NR_donor,
-    color_cells_by = "Cluster.Name", cell_size=1, show_trajectory_graph = FALSE,
-    group_label_size=8) +
-    scale_color_manual(values=pal.cluster_renumbered) +
-    geom_curve(
-      data = curves.tmp_manual_NR_donor,
-      mapping = aes(x=x, y=y, xend=xend, yend=yend),
-      size = 0.5,
-      alpha=0.1) + 
-    ggtitle(paste0("TCR Sharing Between All Clusters in",  donor)) +
-    theme(text = element_text(size = 10))
-  
-  ### Plot only 2 clusters' curves at a time 
-  
-  # Plot connections between 4 and 7 for R and NR
-  subset_clusts_curves = c(4,7)
-  cluster_4_7_TCR_manual_NR_donor <- plot_cells(
-    cds_all_tcr_manual_NR_donor,
-    color_cells_by = "Cluster.Name", cell_size=1, alpha=0.8, show_trajectory_graph = FALSE,
-    group_label_size=8) +
-    # scale_color_manual(values=pal.cluster_renumbered) +
-    geom_curve(
-      data = curves.tmp_manual_NR_donor %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-      mapping = aes(x=x, y=y, xend=xend, yend=yend),
-      size = 0.3,
-      alpha=0.1)+ 
-    ggtitle(paste0("TCR Sharing Between Cluster 4,7 in", donor))+
-    theme(text = element_text(size = 10))
-  
-  ## Plot connections between 4,5,6, 8
-  #subset_clusts_curves = c(4,5,6,8)
-  #cluster_4_5_6_8_TCR_manual_NR_donor <- plot_cells(
-  #  cds_all_tcr_manual_NR_donor,
-  #  color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-  #  group_label_size=8) +
-  #  # scale_color_manual(values=pal.cluster_renumbered) +
-  #  geom_curve(
-  #    data = curves.tmp_manual_NR_donor %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-  #    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-  #    size = 0.3,
-  #    alpha=0.1)+ 
-  #  ggtitle(paste0("TCR Sharing Between Cluster 4,5,6,8 in", donor))
-  #
-  ### Plot connections between 4,5,6,7
-  #subset_clusts_curves = c(4,5,6,7)
-  #cluster_4_5_6_7_TCR_manual_NR_donor <- plot_cells(
-  #  cds_all_tcr_manual_NR_donor,
-  #  color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-  #  group_label_size=8) +
-  #  # scale_color_manual(values=pal.cluster_renumbered) +
-  #  geom_curve(
-  #    data = curves.tmp_manual_NR_donor %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-  #    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-  #    size = 0.3,
-  #    alpha=0.1)+ 
-  #  ggtitle(paste0("TCR Sharing Between Cluster 4,5,6,7 in", donor))
-  #
-  ### Plot connections between 5,6,7
-  subset_clusts_curves = c(5,6,7)
-  cluster_5_6_7_TCR_manual_NR_donor <- plot_cells(
-    cds_all_tcr_manual_NR_donor,
-    color_cells_by = "Cluster.Name", cell_size=1,alpha=0.8, show_trajectory_graph = FALSE,
-    group_label_size=8) +
-    # scale_color_manual(values=pal.cluster_renumbered) +
-    geom_curve(
-      data = curves.tmp_manual_NR_donor %>% dplyr::filter(cluster1 %in% c(subset_clusts_curves) & cluster2 %in% c(subset_clusts_curves)),
-      mapping = aes(x=x, y=y, xend=xend, yend=yend),
-      size = 0.3,
-      alpha=0.1)+ 
-    ggtitle(paste0("TCR Sharing Between Cluster 5,6,7 in", donor))+
-    theme(text = element_text(size = 10))
-  
-  plots = list(full_TCR_airline_plot_manual_NR_donor, cluster_4_7_TCR_manual_NR_donor,cluster_5_6_7_TCR_manual_NR_donor )
-  #, , cluster_4_5_6_8_TCR_manual_NR_donor,cluster_4_5_6_7_TCR_manual_NR_donor, )
-  
-  library(gridExtra)
-  pdf(paste0("./FIGURES/",donor,"_non_responder_airline.pdf"), onefile = TRUE, width = 8, height = 15)
-  do.call("grid.arrange", plots)  
-  dev.off()
-  
-}
 
 #### Plot Circos plots all together, by treatment, by donor ####
 
@@ -2315,7 +1178,7 @@ for (donor in donor_list){
 }
 
 
-#### Alpha sharing: Common precursor populations? Count number of cells shared between clusters by donor ####
+#### FIGURE 5E, FIGURE S12A: Alpha sharing: Common precursor populations? Count number of cells shared between clusters by donor ####
 
 # Match alpha chains in a loop by donor
 match_TCR_donor <- function(donor, data) {
@@ -2385,16 +1248,6 @@ match_TCR_alpha_donor_all_cluster_filter_match_precursor <- match_TCR_alpha_dono
   group_by(Donor.ID, precursor_test) %>%
   summarize(number_matches = sum(number_matches))
 
-# plot these aggregated cell values
-precursor_test_plot <- ggplot(match_TCR_alpha_donor_all_cluster_filter_match_precursor, aes(x = precursor_test , y = number_matches, colour = precursor_test)) +
-  geom_boxplot(outlier.shape = NA, alpha = 0.6) +
-  geom_point() + 
-  scale_colour_manual(values = cluster_pal[1:4]) +
-  theme(legend.position = "none", text = element_text(size = 16)) +
-  labs(x = "Potential Shared\nLineage Population", y = "Exhausted Cluster Cells per Donor")
-
-ggsave(precursor_test_plot , file = "./FIGURES/precursor_test_plot.pdf")
-
 # run ANOVA to see if there are differences in the groups
 match_TCR_alpha_donor_all_cluster_filter_match_precursor$precursor_test <- factor(match_TCR_alpha_donor_all_cluster_filter_match_precursor$precursor_test ,
                                                                                   levels= c("1","2","3","4"))
@@ -2404,28 +1257,6 @@ match_TCR_alpha_donor_all_cluster_filter_match_precursor_aov <- car::Anova(match
 precursor_HSD <- agricolae::HSD.test(match_TCR_alpha_donor_all_cluster_filter_match_precursor_fit, "precursor_test", group = TRUE)
 
 # AOV and tukey are not significant, likely because of large difference in sample size
-
-## Subset for the two groups with the closest sample size, sharing with cluster 2 and sharing with cluster 4 and exhausted clusters
-match_TCR_alpha_donor_all_cluster_filter_match_precursor_2_4 <- match_TCR_alpha_donor_all_cluster_filter_match_precursor %>%
-  filter(precursor_test %in% c(2,4))
-t.test(number_matches ~ precursor_test, match_TCR_alpha_donor_all_cluster_filter_match_precursor_2_4)
-# 
-#data:  number_matches by precursor_test
-#t = -2.9378, df = 11.073, p-value = 0.01341
-#alternative hypothesis: true difference in means between group 2 and group 4 is not equal to 0
-#95 percent confidence interval:
-#  -221.19738  -31.80262
-#sample estimates:
-#  mean in group 2 mean in group 4 
-#10.0           136.5 
-
-# plot
-precursor_test_2_4 <- ggplot(match_TCR_alpha_donor_all_cluster_filter_match_precursor_2_4, aes(x = precursor_test , y = number_matches )) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_point() + 
-  labs(x = "Non-Exhausted Cluster", y = "Number of Exhausted Cells Sharing TRA with Potential Precursor") +
-  stat_compare_means()
-ggsave(precursor_test_2_4, file = "./FIGURES/precursor_test_2_4.pdf",height = 8, width=6)
 
 # add stat compare means to plot kruskal wallis
 precursor_test_plot_stats <- ggplot(match_TCR_alpha_donor_all_cluster_filter_match_precursor, aes(x = precursor_test , y = number_matches, colour = precursor_test)) +
@@ -2445,6 +1276,7 @@ match_TCR_alpha_donor_all_cluster_filter_match_precursor_percent_total <-
   group_by(Donor.ID, precursor_test) %>%
   mutate(percent_total = number_matches/total_matches_all_connections *100)
 
+### FIGURE 5E
 precursor_test_plot_stats_percent_total <- ggplot(match_TCR_alpha_donor_all_cluster_filter_match_precursor_percent_total, aes(x = precursor_test , y = percent_total, colour = precursor_test)) +
   geom_boxplot(outlier.shape = NA, alpha = 0.6) +
   geom_point() + 
@@ -2453,6 +1285,7 @@ precursor_test_plot_stats_percent_total <- ggplot(match_TCR_alpha_donor_all_clus
   stat_compare_means()+
   labs(x = "Potential Shared\nLineage Population", y = "% Exhausted Cluster Sharing per Donor")
 
+## FIGURE 5E
 ggsave(precursor_test_plot_stats_percent_total , file = "./FIGURES/precursor_test_plot_stats_percent_total.pdf", device = "pdf", height = 5, width = 4)
 
 ### Repeat but split out the exhausted cluster matches into CD57 and PD1 and also normalize by the total number per person
@@ -2484,7 +1317,7 @@ match_TCR_alpha_donor_all_cluster_filter_match_precursor_PD1 <- match_TCR_alpha_
   group_by(Donor.ID, precursor_test) %>%
   mutate(percent_total = number_matches/total_matches_all_connections *100)
 
-# plot for CD57 and PD1 separately
+# FIGURE S12A: plot for CD57 and PD1 separately
 precursor_test_plot_stats_percent_total_CD57 <- ggplot(match_TCR_alpha_donor_all_cluster_filter_match_precursor_CD57 , aes(x = precursor_test , y = percent_total, colour = precursor_test)) +
   geom_boxplot(outlier.shape = NA, alpha = 0.6) +
   geom_point() + 
@@ -2493,6 +1326,7 @@ precursor_test_plot_stats_percent_total_CD57 <- ggplot(match_TCR_alpha_donor_all
   stat_compare_means()+
   labs(x = "Potential Shared\nLineage Population", y = "% CD57+ Tex Cluster Sharing per Donor")
 
+# FIGURE S12A:
 ggsave(precursor_test_plot_stats_percent_total_CD57, file = "./FIGURES/precursor_test_plot_stats_percent_total_CD57.pdf", device = "pdf", height = 5, width = 4)
 
 precursor_test_plot_stats_percent_total_PD1 <- ggplot(match_TCR_alpha_donor_all_cluster_filter_match_precursor_PD1 , aes(x = precursor_test , y = percent_total, colour = precursor_test)) +
@@ -2503,6 +1337,7 @@ precursor_test_plot_stats_percent_total_PD1 <- ggplot(match_TCR_alpha_donor_all_
   stat_compare_means()+
   labs(x = "Potential Shared\nLineage Population", y = "% PD-1+ Tex Cluster Sharing per Donor")
 
+# FIGURE S12A:
 ggsave(precursor_test_plot_stats_percent_total_PD1, file = "./FIGURES/precursor_test_plot_stats_percent_total_PD1.pdf", device = "pdf", height = 5, width = 4)
 
 
@@ -2525,7 +1360,6 @@ match_TCR_beta_donor_all_cluster <- match_TCR_beta_donor_all %>% dplyr::rename(b
   dplyr::rename(Cluster.Name.From = Cluster.Name, tcr1 = barcode_donorID, barcode_donorID = tcr2) %>%
   left_join(., cds_tcr_manual_metadata[,c("Cluster.Name", "barcode_donorID")]) %>% 
   dplyr::rename(Cluster.Name.To = Cluster.Name, tcr2 = barcode_donorID)
-
 
 #### Alpha sharing: Plot individual cluster sharing with potential precursor clusters as heatmap and Circos ####
 
@@ -2760,12 +1594,6 @@ class(intersection_size_df )
 class(intersection_size_df$set)
 class(intersection_size_df$intersection_size)
 
-# Plot as bubble plot
-upset_exhausted_bubble <- ggplot(intersection_size_df, aes(x ="Distinct Alpha Chains", y = set, size = intersection_size, color = intersection_size)) + 
-  geom_point() + 
-  scale_color_viridis() + labs(x = NULL, y = "Clusters Compared")
-ggsave(upset_exhausted_bubble, file = "./FIGURES/upset_exhausted_bubble.pdf", device = "pdf",height = 5, width =4)
-
 #### Alpha Upset with all TRA and cluster rather subset for cluster connections ####
 # tutorial:https://jokergoo.github.io/ComplexHeatmap-reference/book/upset-plot.html
 # start with original data used to look at the TCR connections between clusters
@@ -2909,168 +1737,14 @@ E(upset_pairwise_net_cluster_col)$color = "gray70"
 #plot(upset_pairwise_net, label.font  = 2)
 #dev.off()
 
-# test circular layout
-l <- layout_in_circle(upset_pairwise_net)
-pdf(file = "./FIGURES/Network_unique_TRA_combos_circular.pdf", width = 8, height = 8)
-plot(upset_pairwise_net, layout = l, main = "Unique TRA Pairs Shared Between Clusters", vertex.label.color="black")
-legend(title = "Cluster Phenotype", x=-1.5, y=-1.3, c("Non-Exhausted","DN Non Naive","CD57-like","PD1-like"), pch=21,
-       col="#777777", pt.bg=network_pheno, pt.cex=2, cex=.8, bty="n", ncol=1)
-legend(title = "Connection Type", x=-0.2, y=-1.3, c("Cross Phenotype Connection", "Inter-Phenotype Connection"), pch=21,
-       col="#777777", pt.bg=edge_color$edge_color, pt.cex=2, cex=.8, bty="n", ncol=1)
-dev.off()
 
-# repeat with force directed
-pdf(file = "./FIGURES/Network_unique_TRA_combos_force_directed.pdf", width = 8, height = 8)
-plot(upset_pairwise_net, main = "Unique TRA Pairs Shared Between Clusters", vertex.label.color="black")
-legend(title = "Cluster Phenotype", x=-1.5, y=-1.3, c("Non-Exhausted","DN Non Naive","CD57-like","PD1-like"), pch=21,
-       col="#777777", pt.bg=network_pheno, pt.cex=2, cex=.8, bty="n", ncol=1)
-legend(title = "Connection Type", x=-0.2, y=-1.3, c("Cross Phenotype Connection", "Inter-Phenotype Connection"), pch=21,
-       col="#777777", pt.bg=edge_color$edge_color, pt.cex=2, cex=.8, bty="n", ncol=1)
-dev.off()
-
-# plot with new grid layout and colors as cluster colors
+##  plot with new grid layout and colors as cluster colors
 pdf(file = "./FIGURES/Network_unique_TRA_combos_force_directed_GRID.pdf", width = 8, height = 8)
 plot(upset_pairwise_net_cluster_col, layout = grid, vertex.label.font  = 2, vertex.label.color="black", vertex.label.cex = 1.5)
 legend(title = "Cluster", x=-2, y=1, legend = c("1","2","3","4","5","6","7","8"), pch=21,
        col="#777777", pt.bg=cluster_pal, pt.cex=2.5, cex=1.5, bty="n", ncol=1)
 title(main = "Unique TRA Pairs Shared Between Clusters",cex.main = 1.5)
 dev.off()
-
-#### Distinct Alpha sharing igraph Network plot by INDIVIDUAL ####
-
-# start with original data used to look at the TCR connections between clusters
-tcr_v_j_cdr3_comb_all_TRA_full_seq_filtered_UMAP_circos
-
-# filter the data just to make it unique by the TCRs found in each cluster PER DONOR
-tcr_v_j_cdr3_comb_all_TRA_full_seq_filtered_UMAP_circos_unique_cluster_DONOR <- tcr_v_j_cdr3_comb_all_TRA_full_seq_filtered_UMAP_circos %>%
-  distinct(cdr3_nt, Cluster.Name, Donor.ID)
-
-donor_list
-upset_exhausted_list_donor_df_pairwise_edges_donor <- NULL
-for (donor in donor_list){
-  
-  # make A binary matrix/data frame for each donor where rows are elements and columns are sets and data is filled in as 1 and zero
-  DONOR_binary <- tcr_v_j_cdr3_comb_all_TRA_full_seq_filtered_UMAP_circos_unique_cluster_DONOR %>%
-    filter(Donor.ID == donor) %>%
-    # add counter
-    mutate(Test = 1) %>%
-    tidyr::pivot_wider(values_from = Test, names_from = Cluster.Name) %>% 
-    replace(is.na(.), 0) %>% column_to_rownames(.,var = "cdr3_nt") 
-  
-  # put clusters in numerical order
-  DONOR_binary <-  DONOR_binary[,order(colnames(DONOR_binary))]
-  
-  # use the Vennerable package to extract distinct overlaps between sets
-  
-  #provide all your groups as list
-  upset_exhausted_list_donor =Venn(list(
-    "1" = rownames(DONOR_binary )[DONOR_binary $`1` == 1],
-    "2" = rownames(DONOR_binary )[DONOR_binary $`2` == 1],
-    "3" = rownames(DONOR_binary )[DONOR_binary $`3` == 1],
-    "4" = rownames(DONOR_binary )[DONOR_binary $`4` == 1] ,
-    "5" = rownames(DONOR_binary )[DONOR_binary $`5` == 1],
-    "6" = rownames(DONOR_binary )[DONOR_binary $`6` == 1],
-    "7" = rownames(DONOR_binary )[DONOR_binary $`7` == 1],
-    "8" = rownames(DONOR_binary )[DONOR_binary $`8` == 1]))  
-  
-  # translate binary matrix to from-to combinations
-  upset_exhausted_list_donor_matrix <- upset_exhausted_list_donor@IndicatorWeight
-  upset_exhausted_list_donor_matrix <- upset_exhausted_list_donor_matrix[,-9] 
-  
-  upset_exhausted_list_donor_matrix_from_to <- as.matrix(apply(upset_exhausted_list_donor_matrix==1,1,function(a) paste0(colnames(upset_exhausted_list_donor_matrix)[a], collapse = "")))
-  upset_exhausted_list_donor_matrix_from_to_df <- data.frame(from_to = upset_exhausted_list_donor_matrix_from_to)
-  
-  # change original to df
-  upset_exhausted_list_donor_df <- as.data.frame(upset_exhausted_list_donor@IndicatorWeight)
-  
-  # join from_to translation with weights 
-  upset_exhausted_list_donor_df <- cbind(upset_exhausted_list_donor_df , upset_exhausted_list_donor_matrix_from_to_df)
-  upset_exhausted_list_donor_df$from_to <- as.numeric(upset_exhausted_list_donor_df$from_to)
-  
-  # extract pairwise comparisons by getting those that are two digits (which means less than 100)
-  upset_exhausted_list_donor_df_pairwise <-  upset_exhausted_list_donor_df %>% filter(from_to < 100 & from_to > 10) %>% filter(.Weight >0)
-  
-  # separate from_to into separate columns
-  mx <- max(nchar( upset_exhausted_list_donor_df_pairwise $from_to))
-  upset_exhausted_list_donor_df_pairwise[c("from","to")] <- read.fwf(textConnection(
-    as.character( upset_exhausted_list_donor_df_pairwise$from_to)), widths = rep(1, mx))
-  
-  # add column regarding inter phenotype connections
-  upset_exhausted_list_donor_df_pairwise <- upset_exhausted_list_donor_df_pairwise %>%
-    mutate(connection_type = case_when(from_to %in% c("57","67","78") ~ "Inter-Phenotype Connection",
-                                       !(from_to %in% c("57","67","78")) ~ "Cross Phenotype Connection"
-                                       
-    ))
-  
-  # Create node df with cluster name and initial number of unique TCRs in that cluster
-  upset_exhausted_list_donor_df_pairwise_nodes <- data.frame(id = c("1","2","3","4","5","6","7","8"),
-                                                             set_size = 
-                                                               c(length(rownames(DONOR_binary)[DONOR_binary$`1` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`2` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`3` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`4` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`5` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`6` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`7` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`8` == 1])),
-                                                             phenotype = c("Non-Exhausted","Non-Exhausted","Non-Exhausted","DN Non Naive","CD57-like","CD57-like",
-                                                                           "PD1-like","CD57-like"))
-  
-  # create edge df 
-  upset_exhausted_list_donor_df_pairwise_edges <- upset_exhausted_list_donor_df_pairwise %>% select(from,to, connection_type, .Weight) %>% dplyr::rename(weight = .Weight)
-  
-  # join with edge color
-  edge_color = data.frame(connection_type = c("Cross Phenotype Connection", "Inter-Phenotype Connection"), edge_color = c("gray80", "#c59e38"))
-  upset_exhausted_list_donor_df_pairwise_edges <- left_join(upset_exhausted_list_donor_df_pairwise_edges, edge_color)
-  
-  # create network
-  upset_pairwise_net_donor <- graph_from_data_frame(d=upset_exhausted_list_donor_df_pairwise_edges, vertices=upset_exhausted_list_donor_df_pairwise_nodes, directed=F) 
-  upset_pairwise_net_donor_cluster_col <- graph_from_data_frame(d=upset_exhausted_list_donor_df_pairwise_edges, vertices=upset_exhausted_list_donor_df_pairwise_nodes, directed=F) 
-  
-  
-  # plot network
-  # set colors of clusters
-  network_colors  <- c("#a2539b","#a2539b","#a2539b", "#6973ca", "#93a24e", "#93a24e", "#ba4d4c", "#93a24e")
-  network_pheno  <- c("#a2539b", "#6973ca", "#93a24e", "#ba4d4c")
-  
-  V(upset_pairwise_net_donor)$color <- network_colors
-  V(upset_pairwise_net_donor_cluster_col)$color <- cluster_pal
-  
-  
-  # Set node size based on audience size:
-  V(upset_pairwise_net_donor)$size <- V(upset_pairwise_net_donor)$set_size
-  V(upset_pairwise_net_donor_cluster_col)$size <- V(upset_pairwise_net_donor_cluster_col)$set_size
-  
-  # Set edge width based on weight:
-  E(upset_pairwise_net_donor)$width <- E(upset_pairwise_net_donor)$weight
-  E(upset_pairwise_net_donor_cluster_col)$width <- E(upset_pairwise_net_donor_cluster_col)$weight
-  
-  # Set edge color 
-  E(upset_pairwise_net)$color = E(upset_pairwise_net)$edge_color
-  E(upset_pairwise_net_donor_cluster_col)$color = "gray70"
-  
-  # test circular layout
-  l <- layout_in_circle(upset_pairwise_net_donor)
-  pdf(file = paste0("./FIGURES/Network_unique_TRA_combos_circular_DONOR_",donor, ".pdf"), width = 8, height = 8)
-  plot(upset_pairwise_net_donor, layout = l, main = paste0("Unique TRA Pairs Shared Between Clusters in Donor ", donor), vertex.label.color="black")
-  legend(title = "Cluster Phenotype", x=-1.5, y=-1.3, c("Non-Exhausted","DN Non Naive","CD57-like","PD1-like"), pch=21,
-         col="#777777", pt.bg=network_pheno, pt.cex=2, cex=.8, bty="n", ncol=1)
-  legend(title = "Connection Type", x=-0.2, y=-1.3, c("Cross Phenotype Connection", "Inter-Phenotype Connection"), pch=21,
-         col="#777777", pt.bg=edge_color$edge_color, pt.cex=2, cex=.8, bty="n", ncol=1)
-  dev.off()
-  
-  pdf(file = paste0("./FIGURES/Network_unique_TRA_combos_circular_DONOR_GRID",donor, ".pdf"), width = 8, height = 8)
-  plot(upset_pairwise_net_donor_cluster_col, layout = grid, vertex.label.font  = 2, vertex.label.color="black", vertex.label.cex = 1.5)
-  legend(title = "Cluster", x=-2, y=1, legend = c("1","2","3","4","5","6","7","8"), pch=21,
-         col="#777777", pt.bg=cluster_pal, pt.cex=2.5, cex=1.5, bty="n", ncol=1)
-  title(main = "Unique TRA Pairs Shared Between Clusters",cex.main = 1.5)
-  dev.off()
-  
-  # export data, weight column is the number of unique shared connections
-  tmp <- upset_exhausted_list_donor_df_pairwise_edges %>% mutate(Donor.ID = donor)
-  upset_exhausted_list_donor_df_pairwise_edges_donor <- rbind(upset_exhausted_list_donor_df_pairwise_edges_donor, tmp)
-  
-}
 
 #### Distinct Beta sharing igraph Network plot ####
 
@@ -3182,31 +1856,8 @@ E(upset_pairwise_net_TRB_cluster_col)$width <- E(upset_pairwise_net_TRB_cluster_
 E(upset_pairwise_net_TRB)$color = E(upset_pairwise_net_TRB)$edge_color
 E(upset_pairwise_net_TRB_cluster_col)$color = "gray70"
 
-# plot
-#pdf(file = "./FIGURES/upset_unique_TRB_combos_net_TRBwork.pdf", width = 12, height = 15)
-#plot(upset_pairwise_net_TRB, label.font  = 2)
-#dev.off()
 
-# test circular layout
-l <- layout_in_circle(upset_pairwise_net_TRB)
-pdf(file = "./FIGURES/Network_unique_TRB_combos_circular.pdf", width = 8, height = 8)
-plot(upset_pairwise_net_TRB, layout = l, main = "Unique TRB Pairs Shared Between Clusters", vertex.label.color="black")
-legend(title = "Cluster Phenotype", x=-1.5, y=-1.3, c("Non-Exhausted","DN Non Naive","CD57-like","PD1-like"), pch=21,
-       col="#777777", pt.bg=network_pheno, pt.cex=2, cex=.8, bty="n", ncol=1)
-legend(title = "Connection Type", x=-0.2, y=-1.3, c("Cross Phenotype Connection", "Inter-Phenotype Connection"), pch=21,
-       col="#777777", pt.bg=edge_color$edge_color, pt.cex=2, cex=.8, bty="n", ncol=1)
-dev.off()
-
-# repeat with force directed
-pdf(file = "./FIGURES/Network_unique_TRB_combos_force_directed.pdf", width = 8, height = 8)
-plot(upset_pairwise_net_TRB, main = "Unique TRB Pairs Shared Between Clusters", vertex.label.color="black")
-legend(title = "Cluster Phenotype", x=-1.5, y=-1.3, c("Non-Exhausted","DN Non Naive","CD57-like","PD1-like"), pch=21,
-       col="#777777", pt.bg=network_pheno, pt.cex=2, cex=.8, bty="n", ncol=1)
-legend(title = "Connection Type", x=-0.2, y=-1.3, c("Cross Phenotype Connection", "Inter-Phenotype Connection"), pch=21,
-       col="#777777", pt.bg=edge_color$edge_color, pt.cex=2, cex=.8, bty="n", ncol=1)
-dev.off()
-
-# plot with new grid layout and colors as cluster colors
+## plot with new grid layout and colors as cluster colors
 pdf(file = "./FIGURES/Network_unique_TRB_combos_force_directed_GRID.pdf", width = 8, height = 8)
 plot(upset_pairwise_net_TRB_cluster_col, layout = grid, vertex.label.font  = 2, vertex.label.color="black", vertex.label.cex = 1.5)
 legend(title = "Cluster", x=-2, y=1, legend = c("1","2","3","4","5","6","7","8"), pch=21,
@@ -3214,144 +1865,7 @@ legend(title = "Cluster", x=-2, y=1, legend = c("1","2","3","4","5","6","7","8")
 title(main = "Unique TRB Pairs Shared Between Clusters",cex.main = 1.5)
 dev.off()
 
-#### Distinct Beta sharing igraph Network plot by INDIVIDUAL ####
-
-# start with original data used to look at the TCR connections between clusters
-tcr_v_j_cdr3_comb_all_TRB_full_seq_filtered_UMAP_circos
-
-# filter the data just to make it unique by the TCRs found in each cluster PER DONOR
-tcr_v_j_cdr3_comb_all_TRB_full_seq_filtered_UMAP_circos_unique_cluster_DONOR <- tcr_v_j_cdr3_comb_all_TRB_full_seq_filtered_UMAP_circos %>%
-  distinct(cdr3_nt, Cluster.Name, Donor.ID)
-
-donor_list
-upset_exhausted_list_donor_df_TRB_pairwise_edges_donor <-  NULL
-for (donor in donor_list){
-  
-  # make A binary matrix/data frame for each donor where rows are elements and columns are sets and data is filled in as 1 and zero
-  DONOR_binary <- tcr_v_j_cdr3_comb_all_TRB_full_seq_filtered_UMAP_circos_unique_cluster_DONOR %>%
-    filter(Donor.ID == donor) %>%
-    # add counter
-    mutate(Test = 1) %>%
-    tidyr::pivot_wider(values_from = Test, names_from = Cluster.Name) %>% 
-    replace(is.na(.), 0) %>% column_to_rownames(.,var = "cdr3_nt") 
-  
-  # put clusters in numerical order
-  DONOR_binary <-  DONOR_binary[,order(colnames(DONOR_binary))]
-  
-  # use the Vennerable package to extract distinct overlaps between sets
-  
-  #provide all your groups as list
-  upset_exhausted_list_donor =Venn(list(
-    "1" = rownames(DONOR_binary )[DONOR_binary $`1` == 1],
-    "2" = rownames(DONOR_binary )[DONOR_binary $`2` == 1],
-    "3" = rownames(DONOR_binary )[DONOR_binary $`3` == 1],
-    "4" = rownames(DONOR_binary )[DONOR_binary $`4` == 1] ,
-    "5" = rownames(DONOR_binary )[DONOR_binary $`5` == 1],
-    "6" = rownames(DONOR_binary )[DONOR_binary $`6` == 1],
-    "7" = rownames(DONOR_binary )[DONOR_binary $`7` == 1],
-    "8" = rownames(DONOR_binary )[DONOR_binary $`8` == 1]))  
-  
-  # translate binary matrix to from-to combinations
-  upset_exhausted_list_donor_matrix <- upset_exhausted_list_donor@IndicatorWeight
-  upset_exhausted_list_donor_matrix <- upset_exhausted_list_donor_matrix[,-9] 
-  
-  upset_exhausted_list_donor_matrix_from_to <- as.matrix(apply(upset_exhausted_list_donor_matrix==1,1,function(a) paste0(colnames(upset_exhausted_list_donor_matrix)[a], collapse = "")))
-  upset_exhausted_list_donor_matrix_from_to_df <- data.frame(from_to = upset_exhausted_list_donor_matrix_from_to)
-  
-  # change original to df
-  upset_exhausted_list_donor_df <- as.data.frame(upset_exhausted_list_donor@IndicatorWeight)
-  
-  # join from_to translation with weights 
-  upset_exhausted_list_donor_df <- cbind(upset_exhausted_list_donor_df , upset_exhausted_list_donor_matrix_from_to_df)
-  upset_exhausted_list_donor_df$from_to <- as.numeric(upset_exhausted_list_donor_df$from_to)
-  
-  # extract pairwise comparisons by getting those that are two digits (which means less than 100)
-  upset_exhausted_list_donor_df_pairwise <-  upset_exhausted_list_donor_df %>% filter(from_to < 100 & from_to > 10) %>% filter(.Weight >0)
-  
-  # separate from_to into separate columns
-  mx <- max(nchar( upset_exhausted_list_donor_df_pairwise $from_to))
-  upset_exhausted_list_donor_df_pairwise[c("from","to")] <- read.fwf(textConnection(
-    as.character( upset_exhausted_list_donor_df_pairwise$from_to)), widths = rep(1, mx))
-  
-  # add column regarding inter phenotype connections
-  upset_exhausted_list_donor_df_pairwise <- upset_exhausted_list_donor_df_pairwise %>%
-    mutate(connection_type = case_when(from_to %in% c("57","67","78") ~ "Inter-Phenotype Connection",
-                                       !(from_to %in% c("57","67","78")) ~ "Cross Phenotype Connection"
-                                       
-    ))
-  
-  # Create node df with cluster name and initial number of unique TCRs in that cluster
-  upset_exhausted_list_donor_df_pairwise_nodes <- data.frame(id = c("1","2","3","4","5","6","7","8"),
-                                                             set_size = 
-                                                               c(length(rownames(DONOR_binary)[DONOR_binary$`1` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`2` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`3` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`4` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`5` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`6` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`7` == 1]),
-                                                                 length(rownames(DONOR_binary)[DONOR_binary$`8` == 1])),
-                                                             phenotype = c("Non-Exhausted","Non-Exhausted","Non-Exhausted","DN Non Naive","CD57-like","CD57-like",
-                                                                           "PD1-like","CD57-like"))
-  
-  # create edge df 
-  upset_exhausted_list_donor_df_pairwise_edges <- upset_exhausted_list_donor_df_pairwise %>% select(from,to, connection_type, .Weight) %>% dplyr::rename(weight = .Weight)
-  
-  # join with edge color
-  edge_color = data.frame(connection_type = c("Cross Phenotype Connection", "Inter-Phenotype Connection"), edge_color = c("gray80", "#c59e38"))
-  upset_exhausted_list_donor_df_pairwise_edges <- left_join(upset_exhausted_list_donor_df_pairwise_edges, edge_color)
-  
-  # create network
-  upset_pairwise_net_donor <- graph_from_data_frame(d=upset_exhausted_list_donor_df_pairwise_edges, vertices=upset_exhausted_list_donor_df_pairwise_nodes, directed=F) 
-  upset_pairwise_net_donor_cluster_col <- graph_from_data_frame(d=upset_exhausted_list_donor_df_pairwise_edges, vertices=upset_exhausted_list_donor_df_pairwise_nodes, directed=F) 
-  
-  
-  # plot network
-  # set colors of clusters
-  network_colors  <- c("#a2539b","#a2539b","#a2539b", "#6973ca", "#93a24e", "#93a24e", "#ba4d4c", "#93a24e")
-  network_pheno  <- c("#a2539b", "#6973ca", "#93a24e", "#ba4d4c")
-  
-  V(upset_pairwise_net_donor)$color <- network_colors
-  V(upset_pairwise_net_donor_cluster_col)$color <- cluster_pal
-  
-  
-  # Set node size based on audience size:
-  V(upset_pairwise_net_donor)$size <- V(upset_pairwise_net_donor)$set_size
-  V(upset_pairwise_net_donor_cluster_col)$size <- V(upset_pairwise_net_donor_cluster_col)$set_size
-  
-  # Set edge width based on weight:
-  E(upset_pairwise_net_donor)$width <- E(upset_pairwise_net_donor)$weight
-  E(upset_pairwise_net_donor_cluster_col)$width <- E(upset_pairwise_net_donor_cluster_col)$weight
-  
-  # Set edge color 
-  E(upset_pairwise_net)$color = E(upset_pairwise_net)$edge_color
-  E(upset_pairwise_net_donor_cluster_col)$color = "gray70"
-  
-  # test circular layout
-  l <- layout_in_circle(upset_pairwise_net_donor)
-  pdf(file = paste0("./FIGURES/Network_unique_TRB_combos_circular_DONOR_",donor, ".pdf"), width = 8, height = 8)
-  plot(upset_pairwise_net_donor, layout = l, main = paste0("Unique TRB Pairs Shared Between Clusters in Donor ", donor), vertex.label.color="black")
-  legend(title = "Cluster Phenotype", x=-1.5, y=-1.3, c("Non-Exhausted","DN Non Naive","CD57-like","PD1-like"), pch=21,
-         col="#777777", pt.bg=network_pheno, pt.cex=2, cex=.8, bty="n", ncol=1)
-  legend(title = "Connection Type", x=-0.2, y=-1.3, c("Cross Phenotype Connection", "Inter-Phenotype Connection"), pch=21,
-         col="#777777", pt.bg=edge_color$edge_color, pt.cex=2, cex=.8, bty="n", ncol=1)
-  dev.off()
-  
-  pdf(file = paste0("./FIGURES/Network_unique_TRB_combos_circular_DONOR_GRID",donor, ".pdf"), width = 8, height = 8)
-  plot(upset_pairwise_net_donor_cluster_col, layout = grid, vertex.label.font  = 2, vertex.label.color="black", vertex.label.cex = 1.5)
-  legend(title = "Cluster", x=-2, y=1, legend = c("1","2","3","4","5","6","7","8"), pch=21,
-         col="#777777", pt.bg=cluster_pal, pt.cex=2.5, cex=1.5, bty="n", ncol=1)
-  title(main = "Unique TRB Pairs Shared Between Clusters",cex.main = 1.5)
-  dev.off()  
-  
-  # export data, weight column is the number of unique shared connections
-  tmp <- upset_exhausted_list_donor_df_pairwise_edges %>% mutate(Donor.ID = donor)
-  upset_exhausted_list_donor_df_TRB_pairwise_edges_donor <- rbind(upset_exhausted_list_donor_df_TRB_pairwise_edges_donor, tmp)
-  
-}
-
-
-#### Network plot of any TRA sharing between or within clusters across all donors ####
+#### FIGURE 5D: Network plot of any TRA sharing between or within clusters across all donors ####
 
 match_TCR_alpha_donor_all_cluster
 
@@ -3399,15 +1913,8 @@ V(all_sharing_net_donor_cluster_col)$size <- V(all_sharing_net_donor_cluster_col
 E(all_sharing_net_donor)$width <- E(all_sharing_net_donor)$number_sharing/100
 E(all_sharing_net_donor_cluster_col)$width <- E(all_sharing_net_donor_cluster_col)$number_sharing/100
 
-# test circular layout
-l <- layout_in_circle(all_sharing_net_donor)
-pdf(file = "./FIGURES/Network_ALL_TRA_combos_circular.pdf", width = 8, height = 8)
-plot(all_sharing_net_donor, layout = l, main = "TRA Pairs Shared within and Between Clusters", vertex.label.color="black")
-legend(title = "Cluster Phenotype", x=-1.5, y=-1.3, c("Non-Exhausted","DN Non Naive","CD57-like","PD1-like"), pch=21,
-       col="#777777", pt.bg=network_pheno, pt.cex=2, cex=.8, bty="n", ncol=1)
-dev.off()
 
-# plot with new grid layout and colors as cluster colors
+# FIGURE 5D: plot with new grid layout and colors as cluster colors
 pdf(file = "./FIGURES/Network_ALL_TRA_combos_GRID.pdf", width = 8.5, height = 7.5)
 plot(all_sharing_net_donor_cluster_col, layout = grid, vertex.label.font  = 2, vertex.label.color="black", 
      vertex.label.cex = 1.5)
@@ -3416,83 +1923,7 @@ legend(title = "Cluster", x=-2, y=1, legend = c("1","2","3","4","5","6","7","8")
 title(main = "TRA Pairs Shared Within\nand Between Clusters",cex.main = 1.5)
 dev.off()
 
-
-#### Network plot of any TRA sharing between or within clusters for each donor ####
-
-match_TCR_alpha_donor_all_cluster
-
-donor_list
-
-TRA_all_donor_sharing <- function(donor, data) {
-  
-  ## Create edge df: count up all the connections in each donor individually
-  ## Create edge df: count up all the connections across all the donors
-  match_TCR_alpha_donor_all_cluster_count_all_DONOR <- data %>% 
-    filter(Donor.ID == donor) %>%
-    group_by(Cluster.Name.From, Cluster.Name.To) %>% dplyr::count() %>%
-    dplyr::rename(from = Cluster.Name.From, to = Cluster.Name.To, number_sharing = n) %>%
-    mutate(from_to = paste(from, to, sep = "-"), Donor.ID = donor)
-  
-  # sort to remove reciprocal matches
-  match_TCR_alpha_donor_all_cluster_count_all_reciprocal_removed_DONOR <- unique(data.frame(t(apply(match_TCR_alpha_donor_all_cluster_count_all_DONOR[,c(1,2)], 1, sort))))
-  colnames(match_TCR_alpha_donor_all_cluster_count_all_reciprocal_removed_DONOR) <- c("from","to") 
-  match_TCR_alpha_donor_all_cluster_count_all_reciprocal_removed_DONOR <- match_TCR_alpha_donor_all_cluster_count_all_reciprocal_removed_DONOR %>% mutate(from_to = paste(from, to, sep = "-"))
-  
-  # filter original edge df now that reciprocal combinations have been removed
-  match_TCR_alpha_donor_all_cluster_count_all_DONOR <- match_TCR_alpha_donor_all_cluster_count_all_DONOR %>% 
-    filter(from_to %in% match_TCR_alpha_donor_all_cluster_count_all_reciprocal_removed_DONOR$from_to)
-  
-  # Create node df: of how many cells in each cluster have a tcr - in each donor individually
-  match_TCR_alpha_donor_all_cluster_donor_tcr_count_DONOR <- data %>% 
-    # filter for donor of interest
-    filter(Donor.ID == donor) %>% 
-    distinct( Cluster.Name.From, tcr1) %>% 
-    dplyr::count( Cluster.Name.From) %>% dplyr::rename(from = Cluster.Name.From, number_cells_with_tcr = n)
-  
-  # create network
-  all_sharing_net_DONOR <- graph_from_data_frame(d=match_TCR_alpha_donor_all_cluster_count_all_DONOR, vertices=match_TCR_alpha_donor_all_cluster_donor_tcr_count_DONOR , directed=F) 
-  
-  # plot network
-  # set colors of clusters
-  network_colors  <- data.frame(node = c(1,2,3,4,5,6,7,8), color = c("#a2539b","#a2539b","#a2539b", "#6973ca", "#93a24e", "#93a24e", "#ba4d4c", "#93a24e"))
-  network_pheno  <- c("#a2539b", "#6973ca", "#93a24e", "#ba4d4c")
-  
-  # subset colors for only those nodes that exist in the data 
-  unique_node <- data.frame(node = unique(c(match_TCR_alpha_donor_all_cluster_donor_tcr_count_DONOR$from, match_TCR_alpha_donor_all_cluster_donor_tcr_count_DONOR$to)))
-  network_colors <- network_colors[ network_colors$node %in% unique_node$node,]
-  
-  V(all_sharing_net_DONOR)$color <- network_colors$color
-  
-  # Set node size based on cell number:
-  V(all_sharing_net_DONOR)$size <- V(all_sharing_net_DONOR)$number_cells_with_tcr/2
-  
-  # Set edge width based on weight:
-  E(all_sharing_net_DONOR)$width <- E(all_sharing_net_DONOR)$number_sharing/50
-  
-  # plot as circular layout
-  l <- layout_in_circle(all_sharing_net_DONOR)
-  pdf(file = paste0("./FIGURES/Network_ALL_TRA_combos_circular_", donor,".pdf"), width = 8, height =8)
-  plot(all_sharing_net_DONOR ,  layout = l)
-  title(paste0("TRA Pairs Shared Between Clusters in ", donor), cex.main = 0.8, col.main="black")
-  garbage <- dev.off()
-  
-  # plot as not circular
-  pdf(file = paste0("./FIGURES/Network_ALL_TRA_combos_force_directed", donor,".pdf"), width = 8, height =8)
-  plot(all_sharing_net_DONOR)
-  title(paste0("TRA Pairs Shared Between Clusters in ", donor), cex.main = 0.8, col.main="black")
-  garbage <- dev.off()
-  
-  # return output by donor so I can concatenate
-  match_TCR_alpha_donor_all_cluster_count_all_DONOR
-}
-
-TRA_all_sharing_donor <- lapply(donor_list, TRA_all_donor_sharing, match_TCR_alpha_donor_all_cluster_rm_dup)
-names(TRA_all_sharing_donor ) <- for (donor in donor_list) {
-  print(paste0("TRA_all_sharing_", donor))
-}
-TRA_all_sharing_donor <- bind_rows(TRA_all_sharing_donor)
-
-#### Network plot of any TRB sharing between or within clusters across all donors ####
+####  FIGURE S11A: Network plot of any TRB sharing between or within clusters across all donors ####
 
 match_TCR_beta_donor_all_cluster
 
@@ -3540,99 +1971,14 @@ V(all_sharing_net_donor_beta_cluster_col)$size <- V(all_sharing_net_donor_beta_c
 E(all_sharing_net_donor_beta)$width <- E(all_sharing_net_donor_beta)$number_sharing/100
 E(all_sharing_net_donor_beta_cluster_col)$width <- E(all_sharing_net_donor_beta_cluster_col)$number_sharing/100
 
-# test circular layout
-l <- layout_in_circle(all_sharing_net_donor_beta)
-pdf(file = "./FIGURES/Network_ALL_TRB_combos_circular.pdf", width = 8, height = 8)
-plot(all_sharing_net_donor_beta, layout = l, main = "TRB Pairs Shared Within and Between Clusters", vertex.label.color="black")
-legend(title = "Cluster Phenotype", x=-1.5, y=-1.3, c("Non-Exhausted","DN Non Naive","CD57-like","PD1-like"), pch=21,
-       col="#777777", pt.bg=network_pheno, pt.cex=2, cex=.8, bty="n", ncol=1)
-dev.off()
-grid
 
-# plot with new grid layout and colors as cluster colors
+#  FIGURE S11A: plot with new grid layout and colors as cluster colors
 pdf(file = "./FIGURES/Network_ALL_TRB_combos_GRID.pdf", width = 8.5, height = 7.5)
 plot(all_sharing_net_donor_beta_cluster_col, layout = grid, vertex.label.font  = 2, vertex.label.color="black", vertex.label.cex = 1.5)
 legend(title = "Cluster", x=-2, y=1, legend = c("1","2","3","4","5","6","7","8"), pch=21,
        col="#777777", pt.bg=cluster_pal, pt.cex=2.5, cex=1.5, bty="n", ncol=1)
 title(main = "TRB Pairs Shared Within\nand Between Clusters",cex.main = 1.5)
 dev.off()
-
-#### Network plot of any TRB sharing between or within clusters for each donor ####
-
-match_TCR_beta_donor_all_cluster_rm_dup
-
-data = match_TCR_beta_donor_all_cluster_rm_dup
-donor =        "10748"
-"10458"    
-
-
-TRB_all_donor_sharing <- function(donor, data) {
-  
-  ## Create edge df: count up all the connections in each donor individually
-  match_TCR_beta_donor_all_cluster_count_all_DONOR <- data %>% 
-    filter(Donor.ID == donor) %>%
-    group_by(Cluster.Name.From, Cluster.Name.To) %>% dplyr::count() %>%
-    dplyr::rename(from = Cluster.Name.From, to = Cluster.Name.To, number_sharing = n) %>% mutate(from_to = paste(from, to, sep = "-"), Donor.ID = donor)
-  
-  # sort to remove reciprocal matches
-  match_TCR_beta_donor_all_cluster_count_all_reciprocal_removed_DONOR <- unique(data.frame(t(apply(match_TCR_beta_donor_all_cluster_count_all_DONOR[,c(1,2)], 1, sort))))
-  colnames(match_TCR_beta_donor_all_cluster_count_all_reciprocal_removed_DONOR) <- c("from","to") 
-  match_TCR_beta_donor_all_cluster_count_all_reciprocal_removed_DONOR <- match_TCR_beta_donor_all_cluster_count_all_reciprocal_removed_DONOR %>% mutate(from_to = paste(from, to, sep = "-"))
-  
-  # filter original edge df now that reciprocal combinations have been removed
-  match_TCR_beta_donor_all_cluster_count_all_DONOR <- match_TCR_beta_donor_all_cluster_count_all_DONOR %>% 
-    filter(from_to %in% match_TCR_beta_donor_all_cluster_count_all_reciprocal_removed_DONOR$from_to)
-  
-  # Create node df: of how many cells in each cluster have a tcr - in each donor individually
-  match_TCR_beta_donor_all_cluster_donor_tcr_count_DONOR <- data %>% 
-    # filter for donor of interest
-    filter(Donor.ID == donor) %>% 
-    distinct( Cluster.Name.From, tcr1) %>% 
-    dplyr::count( Cluster.Name.From) %>% dplyr::rename(from = Cluster.Name.From, number_cells_with_tcr = n)
-  
-  # create network
-  #all_sharing_net_DONOR <- graph_from_data_frame(d=match_TCR_beta_donor_all_cluster_count_all_DONOR, vertices=match_TCR_beta_donor_all_cluster_donor_tcr_count_DONOR , directed=F) 
-  #
-  ## plot network
-  ## set colors of clusters
-  #network_colors  <- data.frame(node = c(1,2,3,4,5,6,7,8), color = c("#a2539b","#a2539b","#a2539b", "#6973ca", "#93a24e", "#93a24e", "#ba4d4c", "#93a24e"))
-  #network_pheno  <- c("#a2539b", "#6973ca", "#93a24e", "#ba4d4c")
-  #
-  ## subset colors for only those nodes that exist in the data 
-  #unique_node <- data.frame(node = unique(c(match_TCR_beta_donor_all_cluster_donor_tcr_count_DONOR$from, match_TCR_beta_donor_all_cluster_donor_tcr_count_DONOR$to)))
-  #network_colors <- network_colors[ network_colors$node %in% unique_node$node,]
-  #
-  #V(all_sharing_net_DONOR)$color <- network_colors$color
-  #
-  ## Set node size based on cell number:
-  #V(all_sharing_net_DONOR)$size <- V(all_sharing_net_DONOR)$number_cells_with_tcr/2
-  #
-  ## Set edge width based on weight:
-  #E(all_sharing_net_DONOR)$width <- E(all_sharing_net_DONOR)$number_sharing/50
-  #plot(all_sharing_net_DONOR)
-  #
-  ## plot as circular layout
-  #l <- layout_in_circle(all_sharing_net_DONOR)
-  #pdf(file = paste0("./FIGURES/Network_ALL_TRB_combos_circular_", donor,".pdf"), width = 8, height =8)
-  #plot(all_sharing_net_DONOR ,  layout = l)
-  #title(paste0("TRB Pairs Shared Between Clusters in ", donor), cex.main = 0.8, col.main="black")
-  #garbage <- dev.off()
-  #
-  ## plot as not circular
-  #pdf(file = paste0("./FIGURES/Network_ALL_TRB_combos_force_directed", donor,".pdf"), width = 8, height =8)
-  #plot(all_sharing_net_DONOR)
-  #title(paste0("TRB Pairs Shared Between Clusters in ", donor), cex.main = 0.8, col.main="black")
-  #garbage <- dev.off()
-  #
-  ## return output by donor so I can concatenate
-  match_TCR_beta_donor_all_cluster_count_all_DONOR
-}
-
-TRB_all_sharing_donor <- lapply(donor_list, TRB_all_donor_sharing, match_TCR_beta_donor_all_cluster_rm_dup)
-names(TRB_all_sharing_donor ) <- for (donor in donor_list) {
-  print(paste0("TRB_all_sharing_", donor))
-}
-TRB_all_sharing_donor <- bind_rows(TRB_all_sharing_donor)
 
 #### Compare TRA sharing and TRB sharing to confirm from same cells ####
 
@@ -3644,8 +1990,7 @@ match_TCR_beta_donor_all_cluster_compare <- match_TCR_beta_donor_all_cluster %>%
 nrow(match_TCR_alpha_donor_all_cluster_compare[!(unique(match_TCR_alpha_donor_all_cluster_compare$tcr1_tcr2) %in% unique(match_TCR_beta_donor_all_cluster_compare$tcr1_tcr2)),]) # 844
 nrow(match_TCR_beta_donor_all_cluster_compare[!(unique(match_TCR_beta_donor_all_cluster_compare$tcr1_tcr2) %in% unique(match_TCR_alpha_donor_all_cluster_compare$tcr1_tcr2)),]) # 6634
 
-
-#### Heatmap of any TRA and TRB sharing by donor ####
+#### FIGURE S11B: Heatmap of any TRA and TRB sharing by donor ####
 
 # TRA
 TRA_all_sharing_donor
@@ -3729,7 +2074,7 @@ ComplexHeatmap::Heatmap(TRA_all_sharing_donor_heatmap_between_cluster,
 
 dev.off()
 
-# repeat plot with larger text size and using public donor ID
+# FIGURE S11B TRA: repeat plot with larger text size and using public donor ID
 pdf(file = "./FIGURES/TRA_all_sharing_donor_heatmap_between_cluster_PID.pdf",height = 8, width = 8)
 ComplexHeatmap::Heatmap(TRA_all_sharing_donor_heatmap_between_cluster_PID, 
                         cluster_rows = FALSE, 
@@ -3775,7 +2120,7 @@ ComplexHeatmap::Heatmap(TRB_all_sharing_donor_heatmap_between_cluster,
 
 dev.off()
 
-# repeat plot with larger text size and using public donor ID
+# FIGURE S11B TRB: repeat plot with larger text size and using public donor ID
 pdf(file = "./FIGURES/TRB_all_sharing_donor_heatmap_between_cluster_PID.pdf",height = 8, width = 8)
 ComplexHeatmap::Heatmap(TRB_all_sharing_donor_heatmap_between_cluster_PID, 
                         cluster_rows = FALSE, 
@@ -4134,94 +2479,6 @@ kruskal.test(percent_unique ~ from_to, TRA_kruskal_UMAP_all )
 #data:  percent_unique by from_to
 #Kruskal-Wallis chi-squared = 4.309, df = 9, p-value = 0.8899
 
-#### Plot Airline plot for distinct alphas between 5-7,6-7,8-7 ####
-
-### Extract the unique intersection sets found in the Vennerable table above
-
-#"5-7" = 0000100, #"6-7" = 0000010, #"8-7" = 0000001
-# combine sets
-upset_5_7_6_7_8_7_alpha_set <- data.frame(cdr3_nt_TRA = c(upset_exhausted_list@IntersectionSets$`0000100`, upset_exhausted_list@IntersectionSets$`0000010`,
-                                                          upset_exhausted_list@IntersectionSets$`0000001`))
-class(upset_5_7_6_7_8_7_alpha_set)
-
-# link sequences to the tcr_id_TRA that is saved within the cdr_all_tcr_manual
-cds_all_tcr_manual_id_nt <- as.data.frame(unique(colData(cds_all_tcr_manual)[,c("tcr_id_TRA","cdr3_nt_TRA")]))
-class(cds_all_tcr_manual_id_nt)
-
-upset_5_7_6_7_8_7_alpha_set_TRA <- left_join(upset_5_7_6_7_8_7_alpha_set, cds_all_tcr_manual_id_nt)
-
-# load UMAP data
-load("./EW_T1DAL_Results/cds_all_tcr_manual.Rdata")
-
-# Use the UMAP coldata where the TCR information has been joined
-
-# make a copy of the annotation plus UMAP coordinates, for easier manipulation
-data.tmp_manual <-
-  as.data.frame(colData(cds_all_tcr_manual)) %>%
-  # Combine the colData with the reduced dimension representation coordinated for these clones
-  cbind(
-    as.data.frame(reducedDims(cds_all_tcr_manual)$UMAP) %>%
-      magrittr::set_colnames(c("V1", "V2"))) %>% 
-  dplyr::rename("clone_id_tcr_graph_clonal_expansion" = "tcr_id_TRA")
-
-# create data frame to store links
-curves.tmp_manual <-
-  data.frame(
-    clone_id_tcr_graph_clonal_expansion = character(),
-    x = numeric(),
-    y = numeric(),
-    xend = numeric(),
-    yend = numeric())
-
-# loop over each clone, and extract UMAP coordinates for cells from the same clone
-for (clone_id.tmp_manual in na.omit(unique(data.tmp_manual$clone_id_tcr_graph_clonal_expansion))) {
-  clone_id_curves.tmp_manual <- curves.tmp_manual[0,]
-  data_for_curves.tmp_manual <-
-    data.tmp_manual %>%
-    dplyr::filter(clone_id_tcr_graph_clonal_expansion %in% clone_id.tmp_manual)
-  if (nrow(data_for_curves.tmp_manual) > 1) {
-    for (i in 1:(nrow(data_for_curves.tmp_manual)-1)) {
-      for (j in (i+1):nrow(data_for_curves.tmp_manual)) {
-        clone_id_curves.tmp_manual <-
-          rbind(
-            clone_id_curves.tmp_manual,
-            list(
-              clone_id_tcr_graph_clonal_expansion =
-                data_for_curves.tmp_manual$clone_id_tcr_graph_clonal_expansion[i],
-              x = data_for_curves.tmp_manual$V1[i],
-              y = data_for_curves.tmp_manual$V2[i],
-              cluster1 = data_for_curves.tmp_manual$Cluster.Name[i],
-              xend = data_for_curves.tmp_manual$V1[j],
-              yend = data_for_curves.tmp_manual$V2[j],
-              cluster2 = data_for_curves.tmp_manual$Cluster.Name[j]))
-      }
-    }
-  }
-  curves.tmp_manual <-
-    rbind(curves.tmp_manual, clone_id_curves.tmp_manual)
-}
-
-# subset for curves that are found in upset_5_7_6_7_8_7_alpha_set
-curves.tmp_manual_5_7_6_7_8_7 <- curves.tmp_manual[curves.tmp_manual$clone_id_tcr_graph_clonal_expansion %in% upset_5_7_6_7_8_7_alpha_set_TRA$tcr_id_TRA,]
-
-# set clor pallette
-pal.cluster_renumbered = toupper(c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffed6f','#b15928', "gray","black","blue","red")) 
-
-# make airline plot of the full TCR sharing
-full_TCR_airline_plot_manual_5_7_6_7_8_7 <- plot_cells(
-  cds_all_tcr_manual,
-  color_cells_by = "Cluster.Name", cell_size=1, show_trajectory_graph = FALSE,
-  group_label_size=8) +
-  scale_color_manual(values=pal.cluster_renumbered) +
-  geom_curve(
-    data = curves.tmp_manual_5_7_6_7_8_7,
-    mapping = aes(x=x, y=y, xend=xend, yend=yend),
-    size = 0.1,
-    alpha=0.5) 
-
-ggsave(full_TCR_airline_plot_manual_5_7_6_7_8_7, file = "./FIGURES/full_TCR_airline_plot_manual_5_7_6_7_8_7_ALPHA.pdf", device = "pdf",height = 10, width = 10)
-
-
 #### Alpha sharing: Count sharing between PD1 and CD57 clusters between each other or cluster 4 ####
 
 # filter for sharing between PD1 and CD57 phenotypes
@@ -4309,8 +2566,6 @@ pairs_4_6_6_7_not_in4
 pairs_4_8_8_7_not_in4 
 
 
-
-
 ### Are the same alphas shared with cluster 4 and PD1 and cluster 4 and CD57?
 
 # so take the list of alphas shared between cluster 4 and 5,6,8 and alphas shared between 4 and cluster 7 and compare 
@@ -4385,7 +2640,7 @@ boxplot_common_shared_alpha <- ggplot(match_TCR_alpha_donor_all_cluster_filter_4
 ggsave(boxplot_common_shared_alpha, file = "./FIGURES/boxplot_common_shared_alpha.pdf", width = 7, height = 7)
 
 
-#### Alpha and Beta sharing: Assess tcr specificity of shared TCRs with any cluster ####
+#### Alpha and Beta sharing: Assess tcr Ag specificity of shared TCRs with any cluster ####
 
 # get df with matched tcr alpha chains shared between any cluster
 match_TCR_alpha_donor_all_cluster_filter
@@ -4799,9 +3054,9 @@ tra_cluster_binary_trajectories_4_onward %>% filter(is.na(Trajectory)) # none, a
 save(tra_cluster_binary_trajectories_4_onward, file = "./TCR_Analysis/tra_cluster_binary_trajectories_4_onward.Rdata")
 nrow(tra_cluster_binary_trajectories_4_onward) # 2906
 
-#### Recategorized TRA statistics ####
+#### FIGURE S13B: Recategorized TRA statistics ####
 load("./TCR_Analysis/tra_cluster_binary_trajectories_4_onward.Rdata")
-)
+
 
 # Add up the number of TRAs in each category
 tra_cluster_binary_trajectories_4_onward_stats <- tra_cluster_binary_trajectories_4_onward %>% dplyr::count(Trajectory)
@@ -4870,6 +3125,7 @@ cds_tcr_manual_metadata_ordered_TRA_trajectory_TCR_clone_traj_wilcox <-
   add_y_position(step.increase = 0.02) %>% 
   filter(p.adj <= 0.05)
 
+## FIGURE S13B
 cds_tcr_manual_metadata_ordered_TRA_trajectory_TCR_clone_traj_plot <- cds_tcr_manual_metadata_ordered_TRA_trajectory_TCR_clone_traj %>%
   ggplot(aes(x = Trajectory, y = n)) +
   geom_jitter(width = 0.2) + 
@@ -4877,6 +3133,7 @@ cds_tcr_manual_metadata_ordered_TRA_trajectory_TCR_clone_traj_plot <- cds_tcr_ma
   stat_pvalue_manual(cds_tcr_manual_metadata_ordered_TRA_trajectory_TCR_clone_traj_wilcox,
                      tip.length = 0,step.increase = 0.02) +
   labs(x = "Trajectory", y = "Total Cells per Clone")
+# FIGURE S13B 
 ggsave(cds_tcr_manual_metadata_ordered_TRA_trajectory_TCR_clone_traj_plot, file = "./FIGURES/cds_tcr_manual_metadata_ordered_TRA_trajectory_TCR_clone_traj_plot.pdf",
        width = 7, height = 5)
 
@@ -4887,7 +3144,7 @@ cds_tcr_manual_metadata_ordered_TRA_trajectory_TCR_top10 <-
   filter(Trajectory %in% c("Tex_Branching", "Tex_CD57" ,"Tex_Fluid","Tex_PD1" )) %>%
   top_n(10,n)
 
-#### Calculate TRA diversity by donor and trajectory ####
+#### FIGURE S13A: Calculate TRA diversity by donor and trajectory ####
 
 load( "./TCR_Analysis/tra_cluster_binary_trajectories_4_onward_stats_all_donor.Rdata")
 
@@ -4941,6 +3198,7 @@ Tex_shannon_plot <-
   stat_compare_means(method = "anova", size = 6) + theme(text = element_text(size = 18),
                                                          axis.text.x = element_text(angle = 70, hjust = 1)
   )
+## FIGURE S13A
 ggsave(Tex_shannon_plot , file = "./FIGURES/Tex_shannon_plot.pdf",height = 7, width = 7)
 
 # repeat for Chao estimate
@@ -5007,7 +3265,7 @@ Tex_chao_plot_HSD <- Tex_chao_plot + stat_pvalue_manual(Tex_chao_tukey, label = 
 ggsave(Tex_chao_plot_HSD , file = "./FIGURES/Tex_chao_plot_HSD.pdf", height = 6, width = 5.5)
 
 
-#### Upset plot with recategorized TRA ####
+#### FIGURE 6A: Upset plot with recategorized TRA ####
 
 # Plot upset plot using distinct mode (default)
 levels(as.factor(tra_cluster_binary_trajectories_4_onward$Trajectory))
@@ -5033,7 +3291,7 @@ tra_full_trajectory_order_join <- left_join(tra_full_trajectory_order, degree_jo
 traj_order <- setNames( tra_full_trajectory_order_join $size,tra_full_trajectory_order_join $comb_degree)
 
 # had to compare manually after all this, unfortunately
-
+## FIGURE 6A
 pdf("./FIGURES/TRA_recategorize_trajectory_upset.pdf", height = 5, width = 5)
 UpSet(t(m),
       comb_order = c(9,1,2,7,4,5,10,6,12,11,14,8,3,15,17,16,13),
@@ -5050,7 +3308,7 @@ UpSet(t(m),
 dev.off()
 
 
-#### plot UMAP with different clone trajectories ####
+#### FIGURE 6B: plot UMAP with different clone trajectories ####
 
 ## add trajectory info to metadata - first check order
 all(cds_tcr_manual_metadata_ordered$barcode_original == cds_tcr_manual_metadata_ordered_TRA_trajectory$barcode_original) # TRUE in the same order
@@ -5107,7 +3365,7 @@ cds_all_tcr_manual_ordered_trajectory_tex_cd57 <- plot_cells(cds_all_tcr_manual_
   guides(colour = "none") +
   ggtitle("Tex-CD57+ Cells")
 
-# export all umaps
+# FIGURE 6B: export all umaps
 all_trajectory_umaps <- ggarrange(cds_all_tcr_manual_ordered_trajectory_tex_branching,cds_all_tcr_manual_ordered_trajectory_tex_cd57 ,
                                   cds_all_tcr_manual_ordered_trajectory_tex_fluid,
                                   cds_all_tcr_manual_ordered_trajectory_tex_pd1 )
@@ -5240,7 +3498,7 @@ wilcox.test(percent_of_UMAP_TCR ~ Response, data = cds_tcr_manual_metadata_order
 #W = 3, p-value = 0.05933
 #alternative hypothesis: true location shift is not equal to 0
 
-#### Combine CMV/EBV specific scRNAseq data with CYTOF panel data from Alice ####
+#### FIGURE S14C: Combine CMV/EBV specific scRNAseq data with CYTOF panel data from Alice ####
 
 # Load reformatted version of Alice Wiedeman CYTOF data with the percent of TMR specific cells for each donor across TN10 and T1DAL
 TMR_specific_CYTOF_total_exhausted <- readxl::read_xlsx("./RAW_DATA/AAI 2022 Oral Presentation - 2022-05-07_Plus Virus for Erin_AEW_2023-01-06_RAW_DATA.pptx_EW_reformatted.xlsx",
@@ -5303,6 +3561,7 @@ CMV_EBV_traj_TCR_plot <- ggplot(CMV_EBV_traj_TCR, aes(x = masked_public_PID, y =
                     labels = c("Tex-Branching" ,"Tex-CD57+","Tex-Fluid","Tex-PD-1+")) + 
   facet_grid(.~Response, scales = "free", space = "free")
 
+# FIGURE S14C
 CMV_EBV_TMR_CYTOF <- cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv_donor_CYTOF_virus %>%
   filter(Phenotype_group != "Total_exhausted") %>%
   # join with masked donor ID
@@ -5324,6 +3583,7 @@ ggsave(CYTOF_TRA_CMV_EBV, file = "./FIGURES/CYTOF_TRA_CMV_EBV.pdf", device = "pd
 
 # split up plots
 ggsave(CMV_EBV_traj_TCR_plot, file = "./FIGURES/CMV_EBV_traj_TCR_plot.pdf", device = "pdf", height = 6, width = 10)
+## FIGURE S14C
 ggsave(CMV_EBV_TMR_CYTOF, file = "./FIGURES/CMV_EBV_TMR_CYTOF.pdf", device = "pdf", height = 6, width = 10)
 
 
@@ -5403,7 +3663,7 @@ CMV_TCR_airline_plot_manual <- plot_cells(
 
 ggsave(CMV_TCR_airline_plot_manual, file = "./FIGURES/CMV_TCR_airline_plot_manual_ALPHA.pdf", device = "pdf",height = 5, width = 5)
 
-#### Airline plot of EBV specific TRAs on the UMAP ####
+#### FIGURE S14A: Airline plot of EBV specific TRAs on the UMAP ####
 
 # subset for CMV AND EBV specific cdr3
 all_libs_tcrs_cluster_pub_priv_ag_species_TRA_EBV <- all_libs_tcrs_cluster_pub_priv_ag_species_TRA %>% 
@@ -5491,9 +3751,10 @@ EBV_TCR_airline_plot_manual <- plot_cells(
   theme(text = element_text(size = 16)) +
   labs(title = "EBV-Specific TRA")
 
+# FIGURE S14A
 ggsave(EBV_TCR_airline_plot_manual, file = "./FIGURES/EBV_TCR_airline_plot_manual_ALPHA.pdf", device = "pdf",height = 5, width = 5)
 
-#### Plot CMV specificity for each donor separately ####
+#### FIGURE S14B: Plot CMV specificity for each donor separately ####
 # start with object without cluster 9
 load("./EW_T1DAL_Results/cds_no_MAIT_no_9.Rdata")
 
@@ -5575,6 +3836,7 @@ for(donor in donor_cmv_list) {
   
   plots = list(full_TCR_airline_plot_manual_donor)
   
+  # PLOTTED AS SEPARATE FIGURES FOR EACH DONOR FOR FIGURE S14B
   library(gridExtra)
   pdf(paste0("./FIGURES/",donor,"_CMV_specificity_airline.pdf"), onefile = TRUE, width = 5, height = 6)
   do.call("grid.arrange", plots)  
@@ -5582,7 +3844,7 @@ for(donor in donor_cmv_list) {
   
 }
 
-#### Plot EBV specificity for each donor separately ####
+#### FIGURE S14A: Plot EBV specificity for each donor separately ####
 load(file = "./TCR_Analysis/all_libs_tcrs_cluster_pub_priv_ag_species_TRA_EBV.Rdata")
 load(file = "./TCR_Analysis/cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_ebv.Rdata")
 
@@ -5664,6 +3926,7 @@ for(donor in donor_ebv_list) {
   
   plots = list(full_TCR_airline_plot_manual_donor)
   
+  # PLOTTED AS SEPARATE PLOT FOR EACH DONOR FOR FIGURE S14A AND ONLY HIGHLIGHTED TWO SPECIFIC DONORS
   library(gridExtra)
   pdf(paste0("./FIGURES/",donor,"_EBV_specificity_airline.pdf"), onefile = TRUE, width = 5, height = 6)
   do.call("grid.arrange", plots)  
