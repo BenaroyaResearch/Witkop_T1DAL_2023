@@ -82,10 +82,10 @@ top_markers_expression <- plot_genes_by_group(cds_no_MAIT_no_9,
                                               ordering_type= "maximal_on_diagonal",
                                               max.size=5) +
   theme(text = element_text(size = 16))
-
+# FIGURE S8A
 ggsave(top_markers_expression, file = file.path(plotDir, "top_markers_expression_no9.pdf"), height = 10, width = 8)
 
-#### TABLE S3 Sheet 4: export results of top markers ####
+#### TABLE S3 SHEET 4: export results of top markers ####
 write.csv(top_specific_markers, file = file.path(resultDir, "top_specific_markers_updated_9_26_2023.csv"))
 top_specific_markers <- read.csv(file = file.path(resultDir, "top_specific_markers_updated_9_26_2023.csv"))
 View(top_specific_markers)
@@ -99,7 +99,7 @@ TCM_TEM <-  plot_cells(cds_no_MAIT_no_9, genes = c( "TIGIT","KLRG1", "IL7R", "CC
                        cell_size=0.5)
 ggsave(TCM_TEM, file = file.path(plotDir, "TCM_TEM.pdf"), width = 8, height = 6)
 
-#### FIGURE 4A: Analyze PD1 vs CD57 differential expression by cluster using regression analysis ####
+#### FIGURE 4A, TABLE S4: Analyze PD1 vs CD57 differential expression by cluster using regression analysis ####
 
 # use the data subset to only include those clusters after cluster 4
 cds_no_MAIT_ex <- cds_no_MAIT[,colnames(cds_no_MAIT) %in% row.names(colData(cds_no_MAIT) %>% as.data.frame() %>% filter(Cluster.Name %in% c(5,6,7,8)))]
@@ -396,7 +396,7 @@ PD1_R_up_unique <- data.frame(gene_name = attributes(R_NR_overlap_overlap_venn)$
 write.csv(PD1_R_up_unique, file= file.path(resultDir, "PD1_R_up_unique.csv"))
 
 
-#### FIGURE S9: Plot volcano plots of Differential expression by response for PD1 and CD57 clusters
+#### FIGURE S9: Plot volcano plots of Differential expression by response for PD1 and CD57 clusters ####
 R_NR_colors <- c("#46c19a","#6d80d8")
 
 PD1_curated_label <- data.frame(gene_short_name = c("PSME2", "IFNG", "PSME1", "OASL", 
@@ -516,7 +516,7 @@ cluster_ex_terms_sig_plot_curated_highlight_plot_overlap <- cluster_ex_terms_sig
 ggsave(plot = cluster_ex_terms_sig_plot_curated_highlight_plot_overlap, 
        file = file.path(plotDir, "cluster_ex_terms_sig_plot_curated_highlight_plot_overlap.pdf"),device = "pdf", width = 9, height = 6)
 
-#### TABLE S3: Explore differential expression between CD57 clusters ####
+#### TABLE S3 SHEET 1,2,3: Explore differential expression between CD57 clusters ####
 
 # assess differential expression between cluster 5 and 6
 cds_no_MAIT_ex_5_6 <- cds_no_MAIT[,colnames(cds_no_MAIT) %in% row.names(colData(cds_no_MAIT) %>% as.data.frame() %>% filter(Cluster.Name %in% c(5,6)))]
@@ -607,7 +607,7 @@ rm(gene_fits_ex_6_8)
 
 nrow(cluster_ex_term_6_8_sig)  # 475
 
-#### FIGURE S5 PLOTTING ####
+#### FIGURE S5A,B PLOTTING ####
 
 ## Add correct public masked ID and replot without cluster 9!
 load( file = "./EW_T1DAL_Results/cds_no_MAIT_no_9.Rdata")

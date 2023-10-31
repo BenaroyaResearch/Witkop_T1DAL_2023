@@ -120,6 +120,8 @@ dev.off()
 
 #### FIGURE S16D: PLOT GENE LISTS FROM OTHER PUBLISHED DATASETS ONTO UMAPs ####
 
+# THE UMAPS FOR FIGURE S16D WERE SAVED SEPARATELY AND COMPILED FOR THE FIGURE, the first part of the figure was copied from Figure  3B in the main text
+
 ## load Li et al 2022 Science non-exhausted KIR gene set Table S3, sheet 1 that was a result of each cluster vs all other clusters
 Li_KIR_non_ex_CD57 <- read_excel(file.path(dataDir, "P452-1/Published_KIR_gene_sets/Li_Davis_2022_KIR/science.abi9591_tables_s1_to_s7/science.abi9591_table_s3.xlsx"),
                                  sheet=1) %>% 
@@ -388,6 +390,8 @@ Zheng_KIR_TXK_NK_like_UMAP_gene_set <- plot_cells( cds_all_ordered , color_cells
   labs(colour = "Normalized Zheng\nKIR+TXK+ NK-like\nGene Set")
 
 ggsave(Zheng_KIR_TXK_NK_like_UMAP_gene_set ,file = file.path(plotDir, "Zheng_KIR_TXK_NK_like_UMAP_gene_set.pdf"), height = 5, width = 7)
+
+# AGAIN: ALL UMAPS ABOVE WERE COMPILED SEPARELY INTO A UMAP FOR FIGURE S16D
 
 #### FIGURE S16C: Assess overlap between DGEA genes in CD57 vs all other clusters and loaded gene sets ####
 

@@ -624,6 +624,7 @@ Raw_data_0_wk_CD8_Ag_specificity <- ggplot(percent_Ag_of_CD8_baseline, aes(y = `
                                "#697cd4"))
 Raw_data_0_wk_comb <- egg::ggarrange(Raw_data_0_wk_CD8_Ag_specificity,Raw_data_0_wk_CD57_Ag_specificity_CD57,Raw_data_0_wk_CD57_Ag_specificity_PD1, ncol = 3)
 
+# FIGURE S15A
 ggsave(Raw_data_0_wk_comb, file = file.path(plotDir, "Raw_data_0_wk_Ag_specificity_all_Tex_CD8.pdf"), height = 5,width = 15)  
 
 

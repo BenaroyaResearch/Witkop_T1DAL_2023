@@ -117,6 +117,7 @@ IR_gene_list_zscore_heatmap <- Heatmap(t(col_scaled_median_figure1),row_names_si
 
 IR_gene_list_zscore_heatmap_grob <- grid.grabExpr(draw(IR_gene_list_zscore_heatmap))
 
+# FIGURE 3C:
 pdf(file = "./FIGURES/IR_gene_list_zscore_heatmap.pdf", width = 4, height = 5)
 IR_gene_list_zscore_heatmap
 dev.off()
@@ -172,7 +173,7 @@ pdf(file = "./FIGURES/Daniel_Wherry_2022_Figure2b_Texterm_TexKLR_gene_list_zscor
 Daniel_Wherry_2022_Figure2b_Texterm_TexKLR_gene_list_zscore_heatmap
 dev.off()
 
-### PLOT li et al gene signature
+### PLOT Li et al gene signature
 ## Figure_S3A_heatmap_gene_set
 
 data_for_figure1 <- as.data.frame(t(exprs(cds_data[rowData(cds_data)$gene_short_name %in% Figure_S3A_heatmap_gene_set$gene_name,])) )

@@ -902,7 +902,7 @@ cells_in_clones_tcr_manual_grouped_ex_precursor_barplot_percent <- ggplot(cells_
 ggsave(cells_in_clones_tcr_manual_grouped_ex_precursor_barplot_percent, file = "./FIGURES/cells_in_clones_tcr_manual_grouped_ex_precursor_barplot_percent.pdf",
        width =3.5, height = 4)
 
-#### FIGURE 5C,FIGURE 5F, FIGURE S12B: Create airline plot using manual TCR clonotype defined by alpha chain sharing  ####
+#### FIGURE 5C, FIGURE 5F, FIGURE S12B: Create airline plot using manual TCR clonotype defined by alpha chain sharing  ####
 load("./EW_T1DAL_Results/cds_all_tcr_manual.Rdata")
 
 # Use the UMAP coldata where the TCR information has been joined
@@ -1098,6 +1098,7 @@ cluster_4_to_Tex_TCR_manual <- plot_cells(
     alpha=0.1) +
   labs(title = "Precursor 4 to Any Tex Sharing")
 
+# FIGURE 5F
 ggsave(cluster_4_to_Tex_TCR_manual , file = "./FIGURES/cluster_4_to_Tex_TCR_manual.tiff", device = "tiff",height = 10, width = 10)
 
 ### Split up data to plot responders and non-responders

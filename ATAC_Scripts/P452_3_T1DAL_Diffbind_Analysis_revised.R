@@ -221,7 +221,7 @@ annoData = annoData[idxVec]
 annoData = keepSeqlevels(annoData, wantedLevels)
 seqlevelsStyle(annoData) <- "UCSC" 
 
-#### Analyze results of CD57pos vs CD57minus ####
+#### TABLE S2 SHEET 4: Analyze results of CD57pos vs CD57minus ####
 
 load( file = file.path(resultDir, "ATACseqData_P452_3_norm_final.RData"))
 
@@ -250,7 +250,7 @@ ATACseqData_P452_3_norm_db_anno_down_start <- ATACseqData_P452_3_norm_db_anno %>
 #write.csv(ATACseqData_P452_3_norm_db_anno, file = file.path(resultDir, "ATACseqData_P452_3_norm_db_anno.csv"), row.names = FALSE)
 nrow(ATACseqData_P452_3_norm_db_anno) # 292
 
-#### EXTRACT SIGNIFICANT results of CD57pos vs DN non naive ####
+#### TABLE S2 SHEET 1: EXTRACT SIGNIFICANT results of CD57pos vs DN non naive ####
 
 # Set seqlevel style for comparisons
 ATACseqData_P452_3_norm_db_anno_CD57pos_DN <- dba.report(ATACseqData_P452_3_norm,
@@ -274,7 +274,7 @@ ATACseqData_P452_3_norm_db_anno_CD57pos_DN_up <- ATACseqData_P452_3_norm_db_anno
 ### THIS SHEET WAS USED FOR TABLE S2 SHEET 1 "CD57+DP_vs_DN_Up_0.05"
 #write.csv(ATACseqData_P452_3_norm_db_anno_CD57pos_DN_up, file = file.path(resultDir, "ATACseqData_P452_3_norm_db_anno_CD57pos_DN_up.csv"), row.names = FALSE)
 
-#### EXTRACT SIGNIFICANT results of CD57minus vs DN non naive ####
+#### TABLE S2 SHEET 2: EXTRACT SIGNIFICANT results of CD57minus vs DN non naive ####
 
 # Set seqlevel style for comparisons
 ATACseqData_P452_3_norm_db_anno_CD57minus_DN <- dba.report(ATACseqData_P452_3_norm,
@@ -492,12 +492,12 @@ ATACseqData_P452_3_norm_db_anno_0.5_volcano_PPI_plot_subset <- ATACseqData_P452_
   annotation_custom(text_low,xmin=-2,xmax=-2,ymin=-0.5,ymax=-0.5) +
   coord_cartesian( clip="off")
 
-# export plot
+# FIGURE 2A: export plot
 ggsave(plot = ATACseqData_P452_3_norm_db_anno_0.5_volcano_PPI_plot_subset, 
        file = file.path(plotDir, "ATACseqData_P452_3_norm_db_anno_0.5_volcano_PPI_plot_subset.pdf"),device = "pdf", width = 7, height = 7)
 
 
-#### FIGURE S2: Assess overlap of sites between the contrasts ####
+#### FIGURE S2, TABLE S2 SHEET 3: Assess overlap of sites between the contrasts ####
 
 ## Create dbs report objects for each of the three contrasts
 
@@ -591,7 +591,7 @@ write.csv(Venn_CD57minus_CD57pos_vsDN_in_all, file = file.path(resultDir, "Venn_
 write.csv(Venn_CD57minus_CD57pos_vsDN_onlyA, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_onlyA_up.csv"), row.names = FALSE)
 write.csv(Venn_CD57minus_CD57pos_vsDN_onlyB, file = file.path(resultDir, "Venn_CD57minus_CD57pos_vsDN_onlyB_up.csv"), row.names = FALSE)
 
-## PLOT FIGURE S2 Sheet 3 venn diagram
+## PLOT FIGURE S2 venn diagram
 ## plot the Venn diagram with shared up sites only
 # Input in the form of a named numeric vector
 fit2 <- euler(c(
