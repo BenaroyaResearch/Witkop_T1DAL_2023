@@ -3587,7 +3587,7 @@ ggsave(CMV_EBV_traj_TCR_plot, file = "./FIGURES/CMV_EBV_traj_TCR_plot.pdf", devi
 ggsave(CMV_EBV_TMR_CYTOF, file = "./FIGURES/CMV_EBV_TMR_CYTOF.pdf", device = "pdf", height = 6, width = 10)
 
 
-#### Airline plot of CMV Specific TRAs on UMAP for supplemental info ####
+#### FIGURE 6D: Airline plot of CMV Specific TRAs on UMAP ####
 
 # start with object without cluster 9
 load("./EW_T1DAL_Results/cds_no_MAIT_no_9.Rdata")
@@ -3661,6 +3661,7 @@ CMV_TCR_airline_plot_manual <- plot_cells(
   theme(text = element_text(size = 16)) +
   labs(title = "CMV-Specific TRAs")
 
+## FIGURE 6D:
 ggsave(CMV_TCR_airline_plot_manual, file = "./FIGURES/CMV_TCR_airline_plot_manual_ALPHA.pdf", device = "pdf",height = 5, width = 5)
 
 #### FIGURE S14A: Airline plot of EBV specific TRAs on the UMAP ####
