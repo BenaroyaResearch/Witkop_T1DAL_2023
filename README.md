@@ -2,7 +2,7 @@
 
 This repository houses code used to analyze and generate figures from scRNA-seq and ATAC-seq data presented in Witkop et al., 2023. 
 
-The code used to generate each figure or table is presented below. Code sections are labelled within each script for the figure or table they support.
+The code used to generate each figure or table is presented below for each part of every figure (A, B, C, D, E, F). Code sections are labelled within each script for the figure or table they support.
 
 | FIGURE               | A                                            | B                                            | C                                            | D                                          | E                                          | F                                   |
 |----------------------|----------------------------------------------|----------------------------------------------|----------------------------------------------|--------------------------------------------|--------------------------------------------|-------------------------------------|
