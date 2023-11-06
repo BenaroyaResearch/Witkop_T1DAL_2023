@@ -3,8 +3,9 @@
 # this script assesses patterns of TCR sharing and generated TCR figures 
 
 #### README: 
-  # The first part of the script uses clone pairs that were unfiltered 
-    # for multiple alphas and betas and determined by tcrGraph to calculate Jaccard similarity 
+  # The first part of the script uses clone pairs that were not filtered to remove
+    # cells with multiple alphas and betas and were determined by tcrGraph.
+    # this data was used to calculate Jaccard similarity. 
   # The second part of the script and onwards from the section titled
     # "CALCULATE TCR SHARING MANUALLY USING V,J CDR3_NT AND REPEAT ANALYES BELOW"
     # uses my manual matching of clone pairs and filtering to only keep pairs from
@@ -200,7 +201,7 @@ tcr_graph_output_all = tcrGraph::makeTcrGraph(all_libs_tcrs,link="cdr3_nt")
 
 # count TCR clones and get the number of each clone
 tcrGraph_clones_all <- tcrGraph::getClonesFromTcrGraph(tcr_graph_output_all, link = "cdr3_nt")
-#save(tcrGraph_clones_all,file="EW_T1DAL_Results/tcrGraph output.Rdata")
+#save(tcrGraph_clones_all,file=file.path(resultDir, "tcrGraph output.Rdata"))
 
 # load previously saved results
 load(file=file.path(resultDir, "tcrGraph output.Rdata"))
@@ -270,7 +271,7 @@ colData(cds_all)$barcode_donorID <- cds_metadata$barcode_donorID
 
 head(colData(cds_all))
 
-#### Calculate and Plot UMAP with TCR Clone Counts ####
+#### Calculate TCR Clone Counts ####
 
 # Calculate clone counts and add to data frame
 clone_counts <- colData(cds_all)$clone_count
@@ -287,7 +288,7 @@ cds_metadata_ordered
 
 #### SAVE ANALYSIS OUTPUT DATAFRAMES WITH TCRGRAPH CLONEID ####
 
-#save(tcr_metrics, tcrs, all_cloneID_data, cds_metadata_with_clones, cds_metadata_ordered, file = "./EW_T1DAL_Results/tcr_output.Rdata")
+#save(tcr_metrics, tcrs, all_cloneID_data, cds_metadata_with_clones, cds_metadata_ordered, file = file.path(resultDir,"tcr_output.Rdata"))
 # tcr_metrics # metrics on the tcrs
 # tcrs # the original loaded tcr information
 # all_cloneID_data
@@ -295,10 +296,10 @@ cds_metadata_ordered
 # cds_metadata_with_clones # contains merged CDS with TCR info from tcrgraph
 # cds_metadata_ordered # Full cds metadata with TCR info, cluster number, sequence
 
-# save all_libs_tcrs separately, since I'm exporting at a later date and don't want to overright previously saved data
-#save(all_libs_tcrs, file = "./EW_T1DAL_Results/all_libs_tcrs.Rdata")
+# save all_libs_tcrs separately
+#save(all_libs_tcrs, file = file.path(resultDir,"all_libs_tcrs.Rdata"))
 
-#### FIGURE 5B: Calculate Jaccard similarity index between clusters ####
+#### FIGURE 5B: Calculate Jaccard similarity index between clusters using TCRgraph clones ####
 
 # Load previously saved data
 load(file = file.path(resultDir, "tcr_output.Rdata"))
@@ -435,7 +436,7 @@ for (name in names(cluster_list)) {
 compare_clones_jaccard_df
 #save(compare_clones_jaccard_df, file = file.path(resultDir ,"compare_clones_jaccard_df.Rdata"))
 
-### Create clone sharing heatmap ###
+### Create jaccard heatmap ###
 
 load(file = file.path(resultDir ,"compare_clones_jaccard_df.Rdata"))
 
@@ -462,13 +463,13 @@ lower_jaccard <- get_lower_tri(compare_clones_jaccard_df_mat)
 upper_jaccard <- get_upper_tri(compare_clones_jaccard_df_mat)
 
 ## Plot FIGURE 5B
-pdf(file = "./FIGURES/jaccard_similarity_heatmap_upper_purple.pdf", width = 4.5, height = 4)
+pdf(file = file.path(plotDir,"jaccard_similarity_heatmap_upper_purple.pdf"), width = 4.5, height = 4)
 ComplexHeatmap::Heatmap(upper_jaccard, 
                         heatmap_legend_param =  list(title= "TCR\nRepertoire\nOverlap"),
                         col = c("#F7F7F7"  , "#b44dc6c7","#762A83"))
 dev.off()
 
-#### CALCULATE TCR SHARING MANUALLY USING V,J CDR3_NT AND REPEAT ANALYES BELOW ####
+#### CALCULATE TCR SHARING MANUALLY USING V,J CDR3_NT  ####
 
 # This code determines TCR clones using my manual method rather than the tcrgraph method
 
@@ -588,14 +589,12 @@ nrow(tcr_v_j_cdr3_comb_all_TRB_full_seq_filtered) # 5920
 
 ## resave final df with less complicated name
 tcr_clones <- tcr_v_j_cdr3_comb_all_chain_db_a_b_rm_clonotype
-#save(tcr_clones,tcr_v_j_cdr3_comb_all_TRB_full_seq_filtered,tcr_v_j_cdr3_comb_all_TRA_full_seq_filtered , file = "./EW_T1DAL_Results/tcr_clones.RData")
-
+#save(tcr_clones,tcr_v_j_cdr3_comb_all_TRB_full_seq_filtered,tcr_v_j_cdr3_comb_all_TRA_full_seq_filtered , file = file.path(resultDir,"tcr_clones.RData"))
 
 #### Analysis of Expanded and Private vs Public TCRs - using manual assignment ####
 
 # load previously saved data
 load(file.path(resultDir, "tcr_clones.RData"))
-View(tcr_clones)
 
 ## How many tcrs are public vs private. Public = full alpha beta chain combination found in multiple donors
 tcr_clones_public_private <- tcr_clones %>% ungroup() %>% distinct(clonotype_id, Donor.ID) %>% 
@@ -651,10 +650,9 @@ tcr_clones_sharing_expanded_shared_alpha   %>% distinct(tcr_id_TRA, expanded_alp
 
 ## final df with expansion and public private both defined by shared alpha
 tcr_clones_sharing_expanded_shared_alpha
-#save(tcr_clones_sharing_expanded_shared_alpha, file = "./EW_T1DAL_Results/tcr_clones_sharing_expanded_shared_alpha.RData")
+#save(tcr_clones_sharing_expanded_shared_alpha, file = file.path(resultDir,"tcr_clones_sharing_expanded_shared_alpha.RData"))
 
-
-#### Join manual clone data with network data and generate UMAP ####
+#### Join manual clone data with network data  ####
 
 ## Reload cds data
 # Load and rename cds object
@@ -673,7 +671,7 @@ cds_metadata_tcr_df$barcode <-  sapply(strsplit(cds_metadata_tcr_df$barcode_orig
 cds_metadata_tcr_df$barcode_donorID <- paste(cds_metadata_tcr_df$barcode, cds_metadata_tcr_df$Donor.ID, sep="_")
 nrow(cds_metadata_tcr_df) # 27050
 length(unique(cds_metadata_tcr_df$barcode_donorID)) # 27050
-# You should be able to merge with the row.names (barcodes), but I (KD) explicitly created a new column with that barcode ID to make it easier to access via dplyr.
+# You should be able to merge with the row.names (barcodes), but KD explicitly created a new column with that barcode ID to make it easier to access via dplyr.
 
 ## Merge colData(cds_all) with TCR info (by alpha sharing!_) by barcode and Donor ID; if there's a matching barcode and ID between GEX and TCR lib, it will merge, otherwise those fields will be NA
 cds_metadata_with_tcr_manual <- left_join(cds_metadata_tcr_df,tcr_clones_sharing_expanded_shared_alpha, by = c("Donor.ID","barcode_donorID")) #%>% select(-Donor.ID) ## to avoid redundancy in merged colData
@@ -708,9 +706,9 @@ colData(cds_all_tcr_manual)$barcode_donorID <- cds_metadata_with_tcr_manual$barc
 head(colData(cds_all_tcr_manual))
 
 # save
-#save(cds_all_tcr_manual, file = "./EW_T1DAL_Results/cds_all_tcr_manual.Rdata")
+#save(cds_all_tcr_manual, file = file.path(resultDir,"cds_all_tcr_manual.Rdata"))
 
-#### Plot UMAP with MANUAL TCR Clone Counts ####
+#### Format MANUAL TCR Clone Counts for plotting ####
 
 # load previously saved data
 load( file = file.path(resultDir, "cds_all_tcr_manual.Rdata"))
@@ -736,12 +734,10 @@ colData(cds_all_tcr_manual)$clone_count_alpha_UMAP <- cds_tcr_manual_metadata$cl
 # order cds by UMAP clone count
 cds_all_tcr_manual_ordered <- cds_all_tcr_manual[,cds_tcr_manual_metadata_ordered$barcode_original]
 
-#save(cds_all_tcr_manual_ordered, file = "./EW_T1DAL_Results/cds_all_tcr_manual_ordered.Rdata")
-save(cds_tcr_manual_metadata, cds_tcr_manual_metadata_ordered, file =file.path(resultDir,"cds_tcr_manual_metadata.RData"))
+#save(cds_all_tcr_manual_ordered, file = file.path(resultDir,"cds_all_tcr_manual_ordered.Rdata"))
+#save(cds_tcr_manual_metadata, cds_tcr_manual_metadata_ordered, file =file.path(resultDir,"cds_tcr_manual_metadata.RData"))
 
 #### Clone count re-analysis with manual TCR counts ####
-
-### More expanded cells overall between responders and non-responders - defined by alpha?
 
 # load previously saved data
 load(file.path(resultDir, "cds_all_tcr_manual_ordered.Rdata"))
@@ -753,7 +749,7 @@ cells_in_clones_tcr_manual <- cds_tcr_manual_metadata_ordered   %>%
   # remove cluster 9
   filter(Cluster.Name != "9")
 nrow(cells_in_clones_tcr_manual) # WAS 1919 before using defintion based on expansion after joining with UMAP, is now is 1877
-#save(cells_in_clones_tcr_manual, file = "./EW_T1DAL_Results/cells_in_clones_tcr_manual.Rdata")
+#save(cells_in_clones_tcr_manual, file = file.path(resultDir,"cells_in_clones_tcr_manual.Rdata"))
 
 # for use later - Which cells in each cluster are part of any expanded clone based on clonotype id sharing
 cells_in_clones_tcr_manual_clonotype <- cds_tcr_manual_metadata_ordered   %>%
@@ -761,6 +757,7 @@ cells_in_clones_tcr_manual_clonotype <- cds_tcr_manual_metadata_ordered   %>%
   filter(clonotype_count > 1) %>%
   # remove cluster 9
   filter(Cluster.Name != "9")
+
 nrow(cells_in_clones_tcr_manual_clonotype) # 1767
 
 # load previously saved object if necessary
@@ -1144,7 +1141,7 @@ match_TCR_alpha_donor_all_cluster_filter <- match_TCR_alpha_donor_all_cluster %>
 
 # save for use downstream
 #save(match_TCR_alpha_donor_all_cluster, file = file.path(resultDir, "match_TCR_alpha_donor_all_cluster.RData"))
-save(match_TCR_alpha_donor_all_cluster_filter, file= file.path(resultDir, "match_TCR_alpha_donor_all_cluster_filter.Rdata"))
+#save(match_TCR_alpha_donor_all_cluster_filter, file= file.path(resultDir, "match_TCR_alpha_donor_all_cluster_filter.Rdata"))
 
 # calculate total number of links per donor, after aggregating to count the total matches in each category
 match_TCR_alpha_donor_all_cluster_filter_total_per_donor <- match_TCR_alpha_donor_all_cluster_filter %>% group_by(Donor.ID) %>%
@@ -1663,14 +1660,13 @@ tra_cluster_binary_trajectories_4_onward <- tcr_v_j_cdr3_comb_all_TRA_full_seq_f
 tra_cluster_binary_trajectories_4_onward %>% filter(is.na(Trajectory)) # none, all TRA clones have been categorized
 
 # save for future reference
-save(tra_cluster_binary_trajectories_4_onward, file = file.path(resultDir,"tra_cluster_binary_trajectories_4_onward.Rdata"))
+#save(tra_cluster_binary_trajectories_4_onward, file = file.path(resultDir,"tra_cluster_binary_trajectories_4_onward.Rdata"))
 nrow(tra_cluster_binary_trajectories_4_onward) # 2906
 
 #### FIGURE S13B: Recategorized TRA statistics ####
 
 load(file.path(resultDir, "tra_cluster_binary_trajectories_4_onward.Rdata"))
 load(file =file.path(resultDir,"cds_tcr_manual_metadata.RData"))
-
 
 # Add up the number of TRAs in each category
 tra_cluster_binary_trajectories_4_onward_stats <- tra_cluster_binary_trajectories_4_onward %>% dplyr::count(Trajectory)
@@ -1691,14 +1687,14 @@ tra_cluster_binary_trajectories_4_onward_stats_donor$Trajectory <- factor(tra_cl
                                                                           labels = c("Tex-Branching", "Tex-CD57+","Tex-Fluid","Tex-PD1")) 
 
 # save for future use
-save(tra_cluster_binary_trajectories_4_onward_stats_all_donor, file = file.path(resultDir,"tra_cluster_binary_trajectories_4_onward_stats_all_donor.Rdata"))
+#save(tra_cluster_binary_trajectories_4_onward_stats_all_donor, file = file.path(resultDir,"tra_cluster_binary_trajectories_4_onward_stats_all_donor.Rdata"))
 
 # Join with UMAP data to find where these cells are!
 cds_tcr_manual_metadata_ordered_TRA_trajectory <- left_join(cds_tcr_manual_metadata_ordered, tra_cluster_binary_trajectories_4_onward)
 # Joining, by = "cdr3_nt_TRA"
 
 # save for use downstream 
-save(cds_tcr_manual_metadata_ordered_TRA_trajectory, file = file.path(resultDir, "cds_tcr_manual_metadata_ordered_TRA_trajectory.RData"))
+#save(cds_tcr_manual_metadata_ordered_TRA_trajectory, file = file.path(resultDir, "cds_tcr_manual_metadata_ordered_TRA_trajectory.RData"))
 
 # do all cells with TCR have a trajectory label?
 cds_tcr_manual_metadata_ordered_TRA_trajectory  %>% filter(!is.na(clonotype_id)) %>% filter(is.na(Trajectory)) # 0 rows, all have a trajectory
@@ -1706,11 +1702,6 @@ cds_tcr_manual_metadata_ordered_TRA_trajectory  %>% filter(!is.na(clonotype_id))
 # keep only cells with TCR 
 cds_tcr_manual_metadata_ordered_TRA_trajectory_TCR <- cds_tcr_manual_metadata_ordered_TRA_trajectory %>% filter(!is.na(clonotype_id))
 nrow(cds_tcr_manual_metadata_ordered_TRA_trajectory_TCR ) # 4420
-
-# Find number of cells across all donors with each trajectory type
-cds_tcr_manual_metadata_ordered_TRA_trajectory_TCR %>%
-  dplyr::count(cdr3_nt_TRA,Trajectory) %>%
-  ggplot(aes(x = Trajectory, y = n)) + geom_point()
 
 # plot number of cells across all donor trajectory types of interest - each dot is number of cells per clone
 cds_tcr_manual_metadata_ordered_TRA_trajectory_TCR_clone_traj <- cds_tcr_manual_metadata_ordered_TRA_trajectory_TCR %>%
@@ -1823,7 +1814,7 @@ tra_full_trajectory_order_join <- left_join(tra_full_trajectory_order, degree_jo
 # set order to look like format of comb_degree(m)
 traj_order <- setNames( tra_full_trajectory_order_join $size,tra_full_trajectory_order_join $comb_degree)
 
-# had to compare manually after all this, unfortunately
+# additional annotations were added after the fact in inkscape
 ## FIGURE 6A
 pdf(file.path(plotDir,"TRA_recategorize_trajectory_upset.pdf"), height = 5, width = 5)
 UpSet(t(m),
@@ -1908,8 +1899,6 @@ all_trajectory_umaps <- ggarrange(cds_all_tcr_manual_ordered_trajectory_tex_bran
 
 ggsave(all_trajectory_umaps, file = file.path(plotDir, "all_trajectory_umaps.pdf"), height = 5, width = 5)
 
-
-
 #### Assess tcr Ag specificity of shared TRAs with any cluster ####
 
 load(file= file.path(resultDir, "match_TCR_alpha_donor_all_cluster_filter.Rdata"))
@@ -1948,7 +1937,7 @@ all_libs_tcrs_cluster_TRA_TRB_specificity %>% filter(chain == "TRB"& !is.na(anti
 # keep df of those with hits 
 all_libs_tcrs_cluster_TRA_TRB_specificity_filtered <- all_libs_tcrs_cluster_TRA_TRB_specificity %>% filter(!is.na(antigen.species))
 
-save(all_libs_tcrs_cluster_TRA_TRB_specificity_filtered , file = file.path(resultDir, "all_libs_tcrs_cluster_TRA_TRB_specificity_filtered.Rdata"))
+#save(all_libs_tcrs_cluster_TRA_TRB_specificity_filtered , file = file.path(resultDir, "all_libs_tcrs_cluster_TRA_TRB_specificity_filtered.Rdata"))
 
 ### Categorize distinct TCRs into public and private and cross reactive
 
@@ -1979,8 +1968,8 @@ all_libs_tcrs_cluster_pub_priv_ag_species_TRB <- all_libs_tcrs_cluster_TRA_TRB_s
   dplyr::rename(cdr3_nt_TRB = cdr3_nt)
 
 # save these objects
-save(all_libs_tcrs_cluster_pub_priv_ag_species_TRA, file = file.path(resultDir, "all_libs_tcrs_cluster_pub_priv_ag_species_TRA.Rdata"))
-save(all_libs_tcrs_cluster_pub_priv_ag_species_TRB, file = file.path(resultDir, "all_libs_tcrs_cluster_pub_priv_ag_species_TRB.Rdata"))
+#save(all_libs_tcrs_cluster_pub_priv_ag_species_TRA, file = file.path(resultDir, "all_libs_tcrs_cluster_pub_priv_ag_species_TRA.Rdata"))
+#save(all_libs_tcrs_cluster_pub_priv_ag_species_TRB, file = file.path(resultDir, "all_libs_tcrs_cluster_pub_priv_ag_species_TRB.Rdata"))
 
 #### Determine trajectories on a donor level for CMV specific TRAs ####
 
@@ -1999,7 +1988,7 @@ all_libs_tcrs_cluster_pub_priv_ag_species_TRA_CMV_traj_4_onward <- left_join(all
 cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv <- cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP %>% 
   filter(cdr3_nt_TRA %in% all_libs_tcrs_cluster_pub_priv_ag_species_TRA_CMV$cdr3_nt_TRA)
 # save for plotting airline plot later
-save(cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv, file = file.path(resultDir,"cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv.Rdata"))
+#save(cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv, file = file.path(resultDir,"cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv.Rdata"))
 
 # calculate the number of cells with each trajectory per donor
 cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_donor <- cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv  %>% filter(Trajectory != "Only_4") %>% dplyr::count(Donor.ID, Trajectory, Response)
@@ -2032,7 +2021,7 @@ cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv <- cds_tcr_manual_me
   filter(cdr3_nt_TRA %in% all_libs_tcrs_cluster_pub_priv_ag_species_TRA_CMV_EBV$cdr3_nt_TRA)
 
 # save for use in airline plot
-save(cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv, file = file.path(resultDir,"cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv.Rdata"))
+#save(cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv, file = file.path(resultDir,"cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv.Rdata"))
 
 cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv[!(cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv$cdr3_nt_TRA %in% unique(cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv$cdr3_nt_TRA )),]
 # this last code revealed that only two additional cdr3_nt_TRAs were identified that were only EBV specific, and these cells had the CD57_no_4 trajectory and I remove them in 
@@ -2049,7 +2038,7 @@ total_tcrs_per_person_in_UMAP_cmv_ebv <- total_tcrs_per_person_in_UMAP %>% dplyr
 cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv_donor <- left_join(cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv_donor, total_tcrs_per_person_in_UMAP_cmv_ebv) %>%
   mutate(percent_of_UMAP_TCR = n/total_UMAP_TCR *100)
 
-save(cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv_donor, file = file.path(resultDir, "cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv_donor.Rdata"))
+#save(cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv_donor, file = file.path(resultDir, "cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv_ebv_donor.Rdata"))
 
 #### FIGURE S14C: Combine CMV/EBV specific scRNAseq data with CYTOF panel data from Alice ####
 
@@ -2135,7 +2124,7 @@ ggsave(CMV_EBV_TMR_CYTOF, file = file.path(plotDir,"CMV_EBV_TMR_CYTOF.pdf"), dev
 load(file.path(resultDir,"cds_no_MAIT_no_9.Rdata"))
 
 # load subset cds metadata with the cmv specific cells
-load(file = file.path("cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv.Rdata"))
+load(file = file.path(resultDir,"cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_cmv.Rdata"))
 
 # Use the UMAP coldata where the TCR information has been joined
 
@@ -2217,7 +2206,7 @@ load(file.path(resultDir,"cds_no_MAIT_no_9.Rdata"))
 # subset for CMV AND EBV specific cdr3
 all_libs_tcrs_cluster_pub_priv_ag_species_TRA_EBV <- all_libs_tcrs_cluster_pub_priv_ag_species_TRA %>% 
   filter( antigen.species == "EBV")
-save(all_libs_tcrs_cluster_pub_priv_ag_species_TRA_EBV , file = file.path(resultDir,"all_libs_tcrs_cluster_pub_priv_ag_species_TRA_EBV.Rdata"))
+#save(all_libs_tcrs_cluster_pub_priv_ag_species_TRA_EBV , file = file.path(resultDir,"all_libs_tcrs_cluster_pub_priv_ag_species_TRA_EBV.Rdata"))
 
 # Join with differentiation trajectory for each cell
 all_libs_tcrs_cluster_pub_priv_ag_species_TRA_EBV_traj_4_onward <- left_join(all_libs_tcrs_cluster_pub_priv_ag_species_TRA_EBV, tra_cluster_binary_trajectories_4_onward)
@@ -2226,7 +2215,7 @@ all_libs_tcrs_cluster_pub_priv_ag_species_TRA_EBV_traj_4_onward <- left_join(all
 cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_ebv <- cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP %>% 
   filter(cdr3_nt_TRA %in% all_libs_tcrs_cluster_pub_priv_ag_species_TRA_EBV$cdr3_nt_TRA)
 # save for plotting airline plot 
-save(cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_ebv, file = file.path(resultDir,"cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_ebv.Rdata"))
+#save(cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_ebv, file = file.path(resultDir,"cds_tcr_manual_metadata_ordered_TRA_trajectory_UMAP_ebv.Rdata"))
 
 # Use the UMAP coldata where the TCR information has been joined
 
