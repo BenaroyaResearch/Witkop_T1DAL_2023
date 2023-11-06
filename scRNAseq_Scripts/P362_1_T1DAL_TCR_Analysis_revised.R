@@ -2,6 +2,16 @@
 
 # this script assesses patterns of TCR sharing
 
+#### README: 
+# The first part of the script uses clone pairs that were unfiltered 
+# for multiple alphas and betas and determined by tcrGraph to calculate Jaccard similarity 
+
+# The second part of the script and onwards from the section titled
+# "CALCULATE TCR SHARING MANUALLY USING V,J CDR3_NT AND REPEAT ANALYES BELOW"
+# uses my manual matching of clone pairs and filtering to only keep pairs from
+# cells that had been retained during scRNA-seq QC so that I could then map patterns back
+# onto the UMAPs and other plots and feel more confident about unique sharing. 
+
 #### LOAD LIBRARIES ####
 
 library(plyr)
