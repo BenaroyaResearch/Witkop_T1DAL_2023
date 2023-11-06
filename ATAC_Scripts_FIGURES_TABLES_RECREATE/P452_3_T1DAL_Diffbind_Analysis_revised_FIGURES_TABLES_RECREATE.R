@@ -291,7 +291,6 @@ write.csv(ATACseqData_P452_3_norm_db_anno_CD57minus_DN_up, file = file.path(resu
 
 #### FORMAT CD57POS VS CD57NEG SIGNIFICANT SITES FOR FUTURE VOLCANO PLOTS  ####
 
-
 ## Get fuller list of ns and s sites by setting p value threshold to 0.5
 ATACseqData_P452_3_norm_db_anno_0.5 <- dba.report(ATACseqData_P452_3_norm,
                                                   method=DBA_EDGER, 
