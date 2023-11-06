@@ -2,16 +2,16 @@
 
 This repository houses code used to analyze and generate figures from scRNA-seq and ATAC-seq data presented in Witkop et al., 2023. 
 
-### Analysis Scripts 
+### ANALYSIS SCRIPTS
 
 1. Scripts in the folders [ATAC_Scripts_FIGURES_TABLES_RECREATE](https://github.com/BenaroyaResearch/Witkop_T1DAL_2023/tree/main/ATAC_Scripts_FIGURES_TABLES_RECREATE) and [scRNA_seq_scripts_FIGURES_TABLES_RECREATE](https://github.com/BenaroyaResearch/Witkop_T1DAL_2023/tree/main/scRNA_seq_scripts_FIGURES_TABLES_RECREATE) should be referenced for directly making figures. Saved data objects referred to in each script are available for download via this [box folder](https://bri.box.com/s/v3sk3ptclfdnbdc3ebktwlcc3pvdcst5).
 2. Scripts in the folders [ATAC_Scripts_for_reference](https://github.com/BenaroyaResearch/Witkop_T1DAL_2023/tree/main/ATAC_Scripts_for_reference) and [scRNAseq_Scripts_for_reference](https://github.com/BenaroyaResearch/Witkop_T1DAL_2023/tree/main/scRNAseq_Scripts_for_reference) should be used for referencing more complete code including additional analyses.
 
 
-### FIGURE AND TABLE KEY
+### FIGURES AND TABLES KEY
 The code used to generate each figure or table is presented below for each part of every figure (A, B, C, D, E, F). Code sections are labelled within each script for the figure or table they support.
 
-| FIGURE               | A                                            | B                                            | C                                            | D                                          | E                                          | F                                   |
+| FIGURES               | A                                            | B                                            | C                                            | D                                          | E                                          | F                                   |
 |----------------------|----------------------------------------------|----------------------------------------------|----------------------------------------------|--------------------------------------------|--------------------------------------------|-------------------------------------|
 | Figure 1             | Done in Inkscape                             | P452_3_T1DAL_Diffbind_Analysis_revised_FIGURES_TABLES_RECREATE.R     | P452_3_T1DAL_Diffbind_Analysis_revised_FIGURES_TABLES_RECREATE.R     | P452_3_T1DAL_Diffbind_Analysis_revised_FIGURES_TABLES_RECREATE.R   | NA                                         | NA                                  |
 | Figure 2             | P452_3_T1DAL_Diffbind_Analysis_revised_FIGURES_TABLES_RECREATE.R     | P452_3_T1DAL_Diffbind_Analysis_revised_FIGURES_TABLES_RECREATE.R     | P452_3_T1DAL_Diffbind_Analysis_revised_FIGURES_TABLES_RECREATE.R     | NA                                         | NA                                         | NA                                  |
@@ -20,7 +20,7 @@ The code used to generate each figure or table is presented below for each part 
 | Figure 5             | P362_1_T1DAL_TCR_Analysis_revised_FIGURES_TABLES_RECREATE.R          | P362_1_T1DAL_TCR_Analysis_revised_FIGURES_TABLES_RECREATE.R          | P362_1_T1DAL_TCR_Analysis_revised_FIGURES_TABLES_RECREATE.R          | P362_1_T1DAL_TCR_Analysis_revised_FIGURES_TABLES_RECREATE.R        | P362_1_T1DAL_TCR_Analysis_revised_FIGURES_TABLES_RECREATE.R        | P362_1_T1DAL_TCR_Analysis_revised_FIGURES_TABLES_RECREATE.R |
 | Figure 6             | P362_1_T1DAL_TCR_Analysis_revised_FIGURES_TABLES_RECREATE.R          | P362_1_T1DAL_TCR_Analysis_revised_FIGURES_TABLES_RECREATE.R          | Done in Inkscape                             | P362_1_T1DAL_TCR_Analysis_revised_FIGURES_TABLES_RECREATE.R        | NA                                         | NA                                  |
 
-| SUPPLEMENTARY FIGUREs | A                                            | B                                            | C                                           | D                                          | E                                          | F  |
+| SUPPLEMENTARY FIGURES | A                                            | B                                            | C                                           | D                                          | E                                          | F  |
 |----------------------|----------------------------------------------|----------------------------------------------|---------------------------------------------|--------------------------------------------|--------------------------------------------|----|
 | Figure S1            | Done in flowjo and powerpoint                | NA                                           | NA                                          | NA                                         | NA                                         | NA |
 | Figure S2            | P452_3_T1DAL_Diffbind_Analysis_revised_FIGURES_TABLES_RECREATE.R     | NA                                           | NA                                          | NA                                         | NA                                         | NA |
