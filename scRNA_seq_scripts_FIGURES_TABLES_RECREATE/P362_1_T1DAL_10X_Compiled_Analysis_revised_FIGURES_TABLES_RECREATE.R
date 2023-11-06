@@ -65,9 +65,8 @@ cds_data_cluster_no_MAIT_no_9 <- plot_cells(cds_data[,colnames(cds_data) %in%row
                                             label_branch_points = F, label_roots  = F, label_leaves = F) + 
   scale_color_manual(values=pal) +
   theme(text = element_text(size = 20))
-# PLOT FIGURE 3B - note annotations were added afterward in Inkscape
+# PLOT FIGURE 3B - annotations were added afterward in Inkscape
 ggsave(cds_data_cluster_no_MAIT_no_9, file = file.path(plotDir,"cds_data_cluster_no_MAIT_no_9.pdf"), device = "pdf", width= 8, height = 6)
-
 
 #### FIGURE 3C: Z-score scaled heatmap of key marker genes ####
 
@@ -110,7 +109,7 @@ IR_gene_list_zscore_heatmap <- Heatmap(t(col_scaled_median_figure1),row_names_si
 
 IR_gene_list_zscore_heatmap_grob <- grid.grabExpr(draw(IR_gene_list_zscore_heatmap))
 
-# FIGURE 3C:
+# FIGURE 3C: annotations were added in inkscape
 pdf(file = file.path(plotDir,"IR_gene_list_zscore_heatmap.pdf"), width = 5, height = 6)
 IR_gene_list_zscore_heatmap
 dev.off()
@@ -161,7 +160,7 @@ Daniel_Wherry_2022_Figure2b_Texterm_TexKLR_gene_list_zscore_heatmap <-
           heatmap_legend_param = list(labels_gp = grid::gpar(fontsize = 12), title_gp = grid::gpar(fontsize = 16)))
 
 
-## PLOT FIGURE S15B
+## PLOT FIGURE S15B: annotations added in inkscape
 pdf(file = file.path(plotDir, "Daniel_Wherry_2022_Figure2b_Texterm_TexKLR_gene_list_zscore_heatmap.pdf"), width = 5, height = 9)
 Daniel_Wherry_2022_Figure2b_Texterm_TexKLR_gene_list_zscore_heatmap
 dev.off()
@@ -205,7 +204,7 @@ Figure_S3A_heatmap_gene_set_zscore_heatmap <-
           column_names_gp = grid::gpar(fontsize = 16), row_names_gp = grid::gpar(fontsize = 16), 
           heatmap_legend_param = list(labels_gp = grid::gpar(fontsize = 12), title_gp = grid::gpar(fontsize = 16)))
 
-### Plot FIGURE S15A
+### Plot FIGURE S15A: annotations added in inkscape
 pdf(file = file.path(plotDir, "Figure_S3A_heatmap_gene_set_zscore_heatmap.pdf"), width = 5, height = 9)
 Figure_S3A_heatmap_gene_set_zscore_heatmap
 dev.off()
