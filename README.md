@@ -4,7 +4,7 @@ This repository houses code used to analyze and generate figures from scRNA-seq 
 
 ### ANALYSIS SCRIPTS
 
-1. Scripts in the folders [ATAC_Scripts_FIGURES_TABLES_RECREATE](https://github.com/BenaroyaResearch/Witkop_T1DAL_2023/tree/main/ATAC_Scripts_FIGURES_TABLES_RECREATE) and [scRNA_seq_scripts_FIGURES_TABLES_RECREATE](https://github.com/BenaroyaResearch/Witkop_T1DAL_2023/tree/main/scRNA_seq_scripts_FIGURES_TABLES_RECREATE) should be referenced for directly making figures. Saved data objects referred to in each script are available for download via this [box folder](https://bri.box.com/s/v3sk3ptclfdnbdc3ebktwlcc3pvdcst5).
+1. Scripts in the folders [ATAC_Scripts_FIGURES_TABLES_RECREATE](https://github.com/BenaroyaResearch/Witkop_T1DAL_2023/tree/main/ATAC_Scripts_FIGURES_TABLES_RECREATE) and [scRNA_seq_scripts_FIGURES_TABLES_RECREATE](https://github.com/BenaroyaResearch/Witkop_T1DAL_2023/tree/main/scRNA_seq_scripts_FIGURES_TABLES_RECREATE) should be referenced for directly making figures. Saved data objects and raw data referred to in each script are available for download via this [box folder](https://bri.box.com/s/b7x018n5za6ugvi2rj7dllnh4j8fdk6x).
 2. Scripts in the folders [ATAC_Scripts_for_reference](https://github.com/BenaroyaResearch/Witkop_T1DAL_2023/tree/main/ATAC_Scripts_for_reference) and [scRNAseq_Scripts_for_reference](https://github.com/BenaroyaResearch/Witkop_T1DAL_2023/tree/main/scRNAseq_Scripts_for_reference) should be used for referencing more complete code including additional analyses.
 
 
