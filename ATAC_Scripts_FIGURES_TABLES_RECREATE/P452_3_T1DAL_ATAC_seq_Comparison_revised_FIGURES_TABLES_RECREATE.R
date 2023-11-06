@@ -447,7 +447,7 @@ TEMRA_giles_phyper_results_up
 
 # save 
 write.csv(TEMRA_giles_phyper_results_up , file.path(resultDir, "TEMRA_giles_phyper_results_up.csv"), row.names = FALSE)
-save(TEMRA_giles_phyper_results_up , file = file.path(resultDir, "TEMRA_giles_phyper_results_up.Rdata"))
+#save(TEMRA_giles_phyper_results_up , file = file.path(resultDir, "TEMRA_giles_phyper_results_up.Rdata"))
 
 ### Plot results as a figure rather than a table
 load(file = file.path(resultDir, "TEMRA_giles_phyper_results_up.Rdata"))
@@ -515,7 +515,7 @@ CD57_sig_peaks_score <- CD57_sig_peaks %>%
   summarize(CD57_score = sum(Norm_Counts))
 
 # save
-save(CD57_sig_peaks_score, file = file.path(resultDir, "CD57_sig_peaks_score.Rdata"))
+#save(CD57_sig_peaks_score, file = file.path(resultDir, "CD57_sig_peaks_score.Rdata"))
 
 #### FIGURE S16D: PLOT CD57 ATAC SIGNATURE BY EMRA ####
 
