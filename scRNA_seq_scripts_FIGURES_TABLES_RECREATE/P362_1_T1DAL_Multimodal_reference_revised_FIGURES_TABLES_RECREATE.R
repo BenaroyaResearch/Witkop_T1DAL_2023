@@ -67,18 +67,18 @@ pbmc <- LoadH5Seurat(file.path(annotationDir, "pbmc_multimodal.h5seurat"))
 load( file = file.path(resultDir, "mydata_postQC_MMR.RData"))
 #
 ## plot reference to confirm it downloaded correctly 
-#DimPlot(object = pbmc, reduction = "wnn.umap", group.by = "celltype.l2", label = TRUE, label.size = 3, repel = TRUE) + NoLegend()
+DimPlot(object = pbmc, reduction = "wnn.umap", group.by = "celltype.l2", label = TRUE, label.size = 3, repel = TRUE) + NoLegend()
 #
 ## Find Anchors between the two Seurat datasets
 ## this finds anchors between the datasets using the SPCA dimensionality reduction, which is based entirely on the RNAseq data
-#transferAnchorsData10xMultimodalReference <-
-#  FindTransferAnchors(
-#    reference = pbmc,
-#    query = mydata_postQC_MMR,
-#    normalization.method = "SCT",
-#    reference.reduction = "spca",
-#    dims = 1:50)
-# save version of transferAnchors for easy recovery
+transferAnchorsData10xMultimodalReference <-
+  FindTransferAnchors(
+    reference = pbmc,
+    query = mydata_postQC_MMR,
+    normalization.method = "SCT",
+    reference.reduction = "spca",
+    dims = 1:50)
+ #save version of transferAnchors for easy recovery
 #Normalizing query using reference SCT model
 #Projecting cell embeddings
 #Finding neighborhoods
@@ -114,44 +114,9 @@ data10x@meta.data$predicted.celltype.l3 <-
   factor(data10x@meta.data$predicted.celltype.l3,
          levels = str_sort(unique(data10x@meta.data$predicted.celltype.l3), numeric = TRUE))
 
-# Explore reference mapping
-seuratMapped_predicted_celltype.l1 <- DimPlot(
-  object = data10x, 
-  reduction = "ref.umap", 
-  group.by = "predicted.celltype.l1",
-  label = TRUE, label.size = 3, repel = TRUE) +
-  NoLegend()
-ggsave(seuratMapped_predicted_celltype.l1, file = file.path(plotDir, "seuratMapped_predicted_celltype.l1_UMAP.pdf"), device = "tiff")
-
-seuratMapped_predicted_celltype.l2 <- DimPlot(
-  object = data10x, 
-  reduction = "ref.umap", 
-  group.by = "predicted.celltype.l2",
-  label = TRUE, label.size = 3, repel = TRUE) +
-  NoLegend()
-ggsave(seuratMapped_predicted_celltype.l2, file = file.path(plotDir, "seuratMapped_predicted_celltype.l2_UMAP.pdf"), device = "tiff")
-
-# Explore reference mapping
-seuratMapped_predicted_celltype.l3 <- DimPlot(
-  object = data10x, 
-  reduction = "ref.umap", 
-  group.by = "predicted.celltype.l3",
-  label = TRUE, label.size = 3, repel = TRUE) +
-  NoLegend()
-ggsave(seuratMapped_predicted_celltype.l3, file = file.path(plotDir, "seuratMapped_predicted_celltype.l3_UMAP.pdf"), device = "tiff")
-
-## Plot score for assignments
-data10x_CD8_TEM_CD8_TCM <- FeaturePlot(data10x, features = c("CD8 TEM", "CD8 TCM"),  
-                                       reduction = "ref.umap", cols = c("lightgrey", "darkred"), ncol = 3) & theme(plot.title = element_text(size = 10))
-ggsave(data10x_CD8_TEM_CD8_TCM, file = file.path(plotDir, "data10x_CD8_TEM_CD8_TCM.pdf"), width = 10, height = 5)
-
-data10x_CD4_TEM_CD4_TCM <- FeaturePlot(data10x, features = c("CD4 TEM", "CD4 TCM"),  
-                                       reduction = "ref.umap", cols = c("lightgrey", "darkred"), ncol = 3) & theme(plot.title = element_text(size = 10))
-ggsave(data10x_CD4_TEM_CD4_TCM, file = file.path(plotDir, "data10x_CD4_TEM_CD4_TCM.pdf"), width = 10, height = 5)
-
 # Export the metadata
 Seurat_reference_mapped_metadata <- data10x@meta.data
-save(Seurat_reference_mapped_metadata , file = file.path(resultDir, "Seurat_reference_mapped_metadata.RData"))
+#save(Seurat_reference_mapped_metadata , file = file.path(resultDir, "Seurat_reference_mapped_metadata.RData"))
 
 #### Computing de novo UMAP visualization ####
 
@@ -166,33 +131,19 @@ data10x$id <- 'query'
 refquery <- merge(pbmc, data10x)
 refquery[["spca"]] <- merge(pbmc[["spca"]], data10x[["ref.spca"]])
 refquery <- RunUMAP(refquery, reduction = 'spca', dims = 1:50)
+DimPlot(refquery, group.by = 'id', shuffle = TRUE)
 
-save(refquery, file = file.path(resultDir, "refquery.RData"))
-
-# Plot new de-novo population UMAP
-query_vs_reference_UMAP <- DimPlot(refquery, group.by = 'id', shuffle = TRUE)
-ggsave(query_vs_reference_UMAP, file = file.path(plotDir, "query_vs_reference_UMAP.pdf"))
-
-# plot predicted cell type de novo
-predicted_cell_type_denovo <- DimPlot(
-  object = refquery, 
-  group.by = "predicted.celltype.l2",
-  label = TRUE, label.size = 3, repel = TRUE) +
-  NoLegend()
-ggsave(predicted_cell_type_denovo , file = file.path(plotDir, "predicted_cell_type_denovo.pdf"))
+#save(refquery, file = file.path(resultDir, "refquery.RData"))
 
 #### Map Seurat cell definitions onto Monocle data ####
 
 # Load Monocle clustering 
-load("../EW_T1DAL_Results/P362-1 T1DAL cds object - postQC no MAIT cells.Rdata")
+load(file.path(resultDir,"P362-1 T1DAL cds object - postQC no MAIT cells.Rdata"))
 cds_seurat_reference <- cds_no_MAIT
 
 ## Put new Seurat metadata in the same order as the monocle metadata
 head(colData(cds_seurat_reference))
 head(Seurat_reference_mapped_metadata)
-Seurat_reference_mapped_metadata %>% dplyr::count(id) # all are query none are reference
-#id     n
-#1 query 45115
 
 all(row.names(colData(cds_seurat_reference)) %in% row.names(Seurat_reference_mapped_metadata)) # TRUE
 Seurat_reference_mapped_metadata_ordered <- Seurat_reference_mapped_metadata[row.names(colData(cds_seurat_reference)),]
@@ -252,7 +203,7 @@ CD4_score <- plot_cells(cds_seurat_reference, color_cells_by="CD4_score",show_tr
 ggsave(CD4_score , file = file.path(plotDir, "CD4_score.pdf"))
 
 # save the cds object with the cell types mapped onto it
-save(cds_seurat_reference, file = file.path(resultDir, "cds_seurat_reference.Rdata"))
+#save(cds_seurat_reference, file = file.path(resultDir, "cds_seurat_reference.Rdata"))
 
 #### Map T1DAL data onto to reference CD8 T cells ####
 
