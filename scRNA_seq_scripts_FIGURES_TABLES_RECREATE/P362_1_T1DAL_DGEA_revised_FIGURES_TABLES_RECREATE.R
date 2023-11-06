@@ -341,7 +341,6 @@ nrow(cluster_response_terms_PD1_sig)
 # Repeat for CD57
 # use the data subset to only include CD57 clusters
 cds_no_MAIT_ex_CD57 <- cds_no_MAIT[,colnames(cds_no_MAIT) %in% row.names(colData(cds_no_MAIT) %>% as.data.frame() %>% filter(Cluster.Name %in% c(5,6,8)))]
-levels(as.data.frame(colData(cds_no_MAIT_ex_CD57)$Response))
 #save(cds_no_MAIT_ex_CD57, file = file.path(resultDir, "cds_no_MAIT_ex_CD57.Rdata"))
 
 ## Re-runnning this code is very time consuming, load significant objects below code
